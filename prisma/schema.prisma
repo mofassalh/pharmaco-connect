@@ -1,0 +1,365 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  phone        String?  @unique
+  passwordHash String
+  role         Role     @default(CUSTOMER)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  customer     Customer?
+  adminProfile AdminProfile?
+
+  @@map("users")
+}
+
+enum Role {
+  CUSTOMER
+  ADMIN
+  DELIVERY_STAFF
+  SUPER_ADMIN
+}
+
+model Customer {
+  id             String    @id @default(cuid())
+  userId         String    @unique
+  user           User      @relation(fields: [userId], references: [id])
+  fullName       String
+  dateOfBirth    DateTime?
+  gender         Gender?
+  address        String?
+  area           String?
+  city           String?
+  emergencyPhone String?
+  notes          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  prescriptions Prescription[]
+  orders        Order[]
+  regularMeds   RegularMedicine[]
+  reminders     Reminder[]
+  payments      Payment[]
+
+  @@map("customers")
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+model Prescription {
+  id               String             @id @default(cuid())
+  customerId       String
+  customer         Customer           @relation(fields: [customerId], references: [id])
+  imageUrl         String
+  imageKey         String
+  status           PrescriptionStatus @default(PENDING)
+  aiExtracted      Boolean            @default(false)
+  doctorName       String?
+  doctorReg        String?
+  hospitalName     String?
+  prescriptionDate DateTime?
+  diagnosis        String?
+  aiRawJson        Json?
+  customerNotes    String?
+  submittedAt      DateTime?
+  reviewedBy       String?
+  reviewedAt       DateTime?
+  adminNotes       String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  medicines PrescriptionMedicine[]
+  order     Order?
+
+  @@map("prescriptions")
+}
+
+enum PrescriptionStatus {
+  PENDING
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  FULFILLED
+}
+
+model PrescriptionMedicine {
+  id              String        @id @default(cuid())
+  prescriptionId  String
+  prescription    Prescription  @relation(fields: [prescriptionId], references: [id])
+  medicineName    String
+  genericName     String?
+  dosage          String?
+  frequency       String?
+  duration        String?
+  quantity        Int?
+  instructions    String?
+  inventoryItemId String?
+  inventoryItem   InventoryItem? @relation(fields: [inventoryItemId], references: [id])
+  isAiExtracted   Boolean       @default(false)
+  customerEdited  Boolean       @default(false)
+
+  @@map("prescription_medicines")
+}
+
+model InventoryItem {
+  id              String      @id @default(cuid())
+  name            String
+  genericName     String?
+  brand           String?
+  category        MedCategory @default(GENERAL)
+  unit            String      @default("strip")
+  currentStock    Int         @default(0)
+  minStockLevel   Int         @default(10)
+  maxStockLevel   Int         @default(500)
+  reorderPoint    Int         @default(20)
+  unitPrice       Decimal     @db.Decimal(10, 2)
+  sellingPrice    Decimal     @db.Decimal(10, 2)
+  batchNumber     String?
+  expiryDate      DateTime?
+  manufacturer    String?
+  location        String?
+  isAvailable     Boolean     @default(true)
+  needsReorder    Boolean     @default(false)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  prescriptionMeds PrescriptionMedicine[]
+  orderItems       OrderItem[]
+  regularMeds      RegularMedicine[]
+  stockMovements   StockMovement[]
+
+  @@map("inventory_items")
+}
+
+enum MedCategory {
+  GENERAL
+  ANTIBIOTIC
+  CARDIAC
+  DIABETES
+  RESPIRATORY
+  PAIN_RELIEF
+  VITAMIN
+  ANTACID
+  NEUROLOGICAL
+  DERMATOLOGY
+  OPHTHALMIC
+  OTHER
+}
+
+model StockMovement {
+  id              String        @id @default(cuid())
+  inventoryItemId String
+  inventoryItem   InventoryItem @relation(fields: [inventoryItemId], references: [id])
+  type            StockMoveType
+  quantity        Int
+  previousStock   Int
+  newStock        Int
+  reason          String?
+  reference       String?
+  performedBy     String
+  createdAt       DateTime      @default(now())
+
+  @@map("stock_movements")
+}
+
+enum StockMoveType {
+  IN
+  OUT
+  ADJUSTMENT
+  EXPIRED
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  orderNumber     String      @unique @default(cuid())
+  customerId      String
+  customer        Customer    @relation(fields: [customerId], references: [id])
+  prescriptionId  String?     @unique
+  prescription    Prescription? @relation(fields: [prescriptionId], references: [id])
+  status          OrderStatus @default(PENDING)
+  orderType       OrderType   @default(PRESCRIPTION)
+  totalAmount     Decimal     @db.Decimal(10, 2) @default(0)
+  paidAmount      Decimal     @db.Decimal(10, 2) @default(0)
+  dueAmount       Decimal     @db.Decimal(10, 2) @default(0)
+  deliveryAddress String?
+  deliveryArea    String?
+  deliveryNotes   String?
+  assignedTo      String?
+  assignedAt      DateTime?
+  deliveredAt     DateTime?
+  adminNotes      String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  items         OrderItem[]
+  payments      Payment[]
+  statusHistory OrderStatusHistory[]
+
+  @@map("orders")
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+  RETURNED
+}
+
+enum OrderType {
+  PRESCRIPTION
+  REGULAR
+  WALK_IN
+}
+
+model OrderItem {
+  id              String        @id @default(cuid())
+  orderId         String
+  order           Order         @relation(fields: [orderId], references: [id])
+  inventoryItemId String
+  inventoryItem   InventoryItem @relation(fields: [inventoryItemId], references: [id])
+  medicineName    String
+  quantity        Int
+  unitPrice       Decimal       @db.Decimal(10, 2)
+  totalPrice      Decimal       @db.Decimal(10, 2)
+  isAvailable     Boolean       @default(true)
+
+  @@map("order_items")
+}
+
+model OrderStatusHistory {
+  id        String      @id @default(cuid())
+  orderId   String
+  order     Order       @relation(fields: [orderId], references: [id])
+  status    OrderStatus
+  note      String?
+  changedBy String
+  createdAt DateTime    @default(now())
+
+  @@map("order_status_history")
+}
+
+model RegularMedicine {
+  id              String         @id @default(cuid())
+  customerId      String
+  customer        Customer       @relation(fields: [customerId], references: [id])
+  inventoryItemId String?
+  inventoryItem   InventoryItem? @relation(fields: [inventoryItemId], references: [id])
+  medicineName    String
+  dosage          String?
+  frequency       String?
+  quantity        Int            @default(1)
+  refillDay       Int
+  lastFilledAt    DateTime?
+  nextDueAt       DateTime?
+  isActive        Boolean        @default(true)
+  notes           String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  reminders Reminder[]
+
+  @@map("regular_medicines")
+}
+
+model Reminder {
+  id                String          @id @default(cuid())
+  customerId        String
+  customer          Customer        @relation(fields: [customerId], references: [id])
+  regularMedicineId String?
+  regularMedicine   RegularMedicine? @relation(fields: [regularMedicineId], references: [id])
+  type              ReminderType    @default(MONTHLY_REFILL)
+  status            ReminderStatus  @default(PENDING)
+  dueDate           DateTime
+  reminderSentAt    DateTime?
+  callAttempts      Int             @default(0)
+  lastCallAt        DateTime?
+  callNotes         String?
+  customerConfirmed Boolean?
+  confirmedAt       DateTime?
+  customerNote      String?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@map("reminders")
+}
+
+enum ReminderType {
+  MONTHLY_REFILL
+  FOLLOW_UP
+  PAYMENT_DUE
+  PRESCRIPTION_EXPIRY
+}
+
+enum ReminderStatus {
+  PENDING
+  CALLED
+  CONFIRMED
+  DECLINED
+  ORDER_CREATED
+  COMPLETED
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+  customerId    String
+  customer      Customer      @relation(fields: [customerId], references: [id])
+  orderId       String
+  order         Order         @relation(fields: [orderId], references: [id])
+  amount        Decimal       @db.Decimal(10, 2)
+  method        PaymentMethod @default(CASH)
+  status        PaymentStatus @default(PENDING)
+  transactionId String?
+  receivedBy    String?
+  receivedAt    DateTime?
+  notes         String?
+  createdAt     DateTime      @default(now())
+
+  @@map("payments")
+}
+
+enum PaymentMethod {
+  CASH
+  BKASH
+  NAGAD
+  ROCKET
+  BANK_TRANSFER
+  CARD
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  PARTIAL
+  FAILED
+  REFUNDED
+}
+
+model AdminProfile {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  fullName  String
+  role      String   @default("staff")
+  createdAt DateTime @default(now())
+
+  @@map("admin_profiles")
+}

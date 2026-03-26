@@ -30,11 +30,11 @@ export default function LoginPage() {
       setError(data.error || "কিছু একটা ভুল হয়েছে");
       setLoading(false);
     } else {
-      if (data.role === "ADMIN" || data.role === "SUPER_ADMIN") {
-        router.push("/admin/dashboard");
-      } else {
-        router.push("/customer/dashboard");
-      }
+      if (data.role === "ADMIN" || data.role === "SUPER_ADMIN" || data.role === "DELIVERY_STAFF") {
+  router.push("/admin/dashboard");
+} else {
+  router.push("/customer/profile");
+}
     }
   };
 

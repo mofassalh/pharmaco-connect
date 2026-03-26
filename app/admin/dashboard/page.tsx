@@ -10,7 +10,9 @@ const routes: Record<string, string> = {
 };
 
 export default function AdminDashboard() {
-  const [inventory, setInventory] = useState({ total: 0, available: 0, reorder: 0, outOfStock: 0 });
+  const [inventory, setInventory] = useState({
+    total: 0, totalStock: 0, available: 0, reorder: 0, outOfStock: 0
+  });
 
   useEffect(() => {
     fetch("/api/inventory")
@@ -19,6 +21,7 @@ export default function AdminDashboard() {
         if (!Array.isArray(data)) return;
         setInventory({
           total: data.length,
+          totalStock: data.reduce((sum, i) => sum + (i.currentStock || 0), 0),
           available: data.filter(i => i.isAvailable && !i.needsReorder).length,
           reorder: data.filter(i => i.needsReorder).length,
           outOfStock: data.filter(i => !i.isAvailable).length,
@@ -37,11 +40,7 @@ export default function AdminDashboard() {
 
   return (
     <AdminLayout title="Dashboard" active="/admin/dashboard">
-      <div style={{ fontSize: 11, color: "#a0aec0", marginBottom: 16 }}>
-        {new Date().toLocaleDateString("bn-BD", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
-      </div>
 
-      {/* Stats */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 10, marginBottom: 16 }}>
         {[
           { icon: "📋", val: "0", label: "Pending Prescription", color: "#B7791F" },
@@ -59,7 +58,6 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      {/* Inventory Summary */}
       <div style={{ background: "#fff", border: "0.5px solid #e8ecf0", borderRadius: 12, padding: 14, marginBottom: 16 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: "#2d3748" }}>📦 Inventory Summary</div>
@@ -67,23 +65,24 @@ export default function AdminDashboard() {
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8 }}>
           {[
-            { num: inventory.total, label: "মোট Medicine", color: "#2d3748", bar: "#e2e8f0" },
-            { num: inventory.available, label: "Available", color: "#276749", bar: "#9AE6B4" },
-            { num: inventory.reorder, label: "Reorder দরকার", color: "#B7791F", bar: "#F6AD55" },
-            { num: inventory.outOfStock, label: "Stock নেই", color: "#C53030", bar: "#FC8181" },
+            { num: inventory.total, label: "মোট Medicine", sub: `${inventory.totalStock} unit stock`, color: "#2d3748", bar: "#e2e8f0" },
+            { num: inventory.available, label: "Available", sub: "stock আছে", color: "#276749", bar: "#9AE6B4" },
+            { num: inventory.reorder, label: "Reorder দরকার", sub: "কম stock", color: "#B7791F", bar: "#F6AD55" },
+            { num: inventory.outOfStock, label: "Stock নেই", sub: "unavailable", color: "#C53030", bar: "#FC8181" },
           ].map((item, i) => (
             <div key={i} style={{ background: "#f8fafc", borderRadius: 9, padding: 10, textAlign: "center" }}>
-              <div style={{ fontSize: 18, fontWeight: 700, color: item.color, marginBottom: 3 }}>{item.num}</div>
+              <div style={{ fontSize: 18, fontWeight: 700, color: item.color, marginBottom: 2 }}>{item.num}</div>
               <div style={{ fontSize: 11, color: "#718096" }}>{item.label}</div>
+              <div style={{ fontSize: 10, color: "#a0aec0", marginTop: 2 }}>{item.sub}</div>
               <div style={{ height: 3, borderRadius: 2, background: item.bar, marginTop: 6 }}></div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Quick Actions */}
       <div style={{ fontSize: 13, fontWeight: 600, color: "#2d3748", marginBottom: 10 }}>
-        ⚡ Quick Actions <span style={{ fontSize: 11, color: "#a0aec0", fontWeight: 400 }}>(keyboard shortcut)</span>
+        ⚡ Quick Actions
+        <span style={{ fontSize: 11, color: "#a0aec0", fontWeight: 400, marginLeft: 6 }}>(keyboard shortcut)</span>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 10 }}>
         {[

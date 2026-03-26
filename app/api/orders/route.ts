@@ -1,29 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const due = searchParams.get("due");
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  const { status, callNotes, customerConfirmed } = await req.json();
 
-  const orders = await prisma.order.findMany({
-    where: due ? { dueAmount: { gt: 0 } } : {},
-    include: {
-      customer: {
-        include: { user: true },
-      },
-      items: true,
-      payments: true,
+  const reminder = await prisma.reminder.update({
+    where: { id },
+    data: {
+      status,
+      callNotes,
+      customerConfirmed,
+      lastCallAt: new Date(),
+      callAttempts: { increment: 1 },
     },
-    orderBy: { createdAt: "desc" },
   });
-  return NextResponse.json(orders);
-}
 
-export async function POST(req: NextRequest) {
-  const data = await req.json();
-  const order = await prisma.order.create({
-    data,
-    include: { customer: true, items: true },
-  });
-  return NextResponse.json(order);
+  return NextResponse.json(reminder);
 }

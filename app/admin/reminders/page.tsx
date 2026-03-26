@@ -1,88 +1,53 @@
 "use client";
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { AdminLayout } from "../layout-component";
 
-const statusColor: Record<string, string> = {
-  PENDING: "bg-amber-50 text-amber-600",
-  CALLED: "bg-blue-50 text-blue-600",
-  CONFIRMED: "bg-green-50 text-green-600",
-  DECLINED: "bg-red-50 text-red-600",
-  ORDER_CREATED: "bg-teal-50 text-teal-600",
-  COMPLETED: "bg-gray-100 text-gray-500",
-};
+const statusColor: Record<string, string> = { PENDING: "#B7791F", CALLED: "#2B6CB0", CONFIRMED: "#276749", DECLINED: "#C53030", ORDER_CREATED: "#0D9488", COMPLETED: "#718096" };
+const statusBg: Record<string, string> = { PENDING: "#FFFAF0", CALLED: "#EBF8FF", CONFIRMED: "#F0FFF4", DECLINED: "#FFF5F5", ORDER_CREATED: "#E6FFFA", COMPLETED: "#f7fafc" };
 
 export default function AdminRemindersPage() {
   const [reminders, setReminders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const load = () => {
-    fetch("/api/reminders")
-      .then(r => r.json())
+    fetch("/api/reminders").then(r => r.json())
       .then(data => { setReminders(Array.isArray(data) ? data : []); setLoading(false); });
   };
-
   useEffect(() => { load(); }, []);
 
-  const updateStatus = async (id: string, status: string, notes?: string) => {
-    await fetch(`/api/reminders/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status, callNotes: notes }),
-    });
+  const update = async (id: string, status: string) => {
+    await fetch(`/api/reminders/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status }) });
     load();
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b px-6 py-4 flex items-center gap-3">
-        <Link href="/admin/dashboard" className="text-gray-400 hover:text-gray-600">←</Link>
-        <span className="font-bold text-gray-900">Reminders</span>
-      </div>
-      <div className="max-w-3xl mx-auto px-6 py-6 space-y-3">
-        {loading ? (
-          <div className="text-center py-12 text-gray-400">Loading...</div>
-        ) : reminders.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="text-4xl mb-3">🔔</div>
-            <div className="text-gray-500">কোনো reminder নেই</div>
-          </div>
-        ) : (
-          reminders.map((r, i) => (
-            <div key={i} className="bg-white rounded-2xl border border-gray-100 p-5">
-              <div className="flex items-center justify-between mb-3">
+    <AdminLayout title="Reminders" active="/admin/reminders">
+      {loading ? <div style={{ textAlign: "center", padding: 40, color: "#a0aec0" }}>Loading...</div> :
+        reminders.length === 0 ? <div style={{ textAlign: "center", padding: 40 }}><div style={{ fontSize: 32, marginBottom: 8 }}>🔔</div><div style={{ color: "#a0aec0" }}>কোনো reminder নেই</div></div> :
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {reminders.map((r, i) => (
+            <div key={i} style={{ background: "#fff", border: "0.5px solid #e8ecf0", borderRadius: 12, padding: 14 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
                 <div>
-                  <div className="font-bold text-gray-900">{r.customer?.fullName}</div>
-                  <div className="text-xs text-gray-400">{r.regularMedicine?.medicineName || r.type}</div>
-                  <div className="text-xs text-gray-400">Due: {new Date(r.dueDate).toLocaleDateString("bn-BD")}</div>
+                  <div style={{ fontWeight: 600, fontSize: 14, color: "#1a202c" }}>{r.customer?.fullName}</div>
+                  <div style={{ fontSize: 11, color: "#a0aec0" }}>{r.regularMedicine?.medicineName || r.type}</div>
+                  <div style={{ fontSize: 11, color: "#a0aec0" }}>Due: {new Date(r.dueDate).toLocaleDateString("bn-BD")}</div>
                 </div>
-                <span className={`text-xs px-3 py-1 rounded-full font-medium ${statusColor[r.status]}`}>
-                  {r.status}
-                </span>
+                <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 20, fontWeight: 600, background: statusBg[r.status] || "#f7fafc", color: statusColor[r.status] || "#718096", height: "fit-content" }}>{r.status}</span>
               </div>
               {r.status === "PENDING" && (
-                <div className="flex gap-2">
-                  <button onClick={() => updateStatus(r.id, "CALLED")}
-                    className="flex-1 bg-teal-500 text-white py-2 rounded-xl text-sm font-medium hover:bg-teal-600 transition">
-                    📞 Call করলাম
-                  </button>
-                </div>
+                <button onClick={() => update(r.id, "CALLED")} style={{ width: "100%", background: "#0D9488", color: "#fff", border: "none", padding: 9, borderRadius: 9, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>📞 Call করলাম</button>
               )}
               {r.status === "CALLED" && (
-                <div className="flex gap-2">
-                  <button onClick={() => updateStatus(r.id, "CONFIRMED")}
-                    className="flex-1 bg-green-500 text-white py-2 rounded-xl text-sm font-medium hover:bg-green-600 transition">
-                    ✓ Confirmed
-                  </button>
-                  <button onClick={() => updateStatus(r.id, "DECLINED")}
-                    className="flex-1 border border-red-200 text-red-500 py-2 rounded-xl text-sm hover:bg-red-50 transition">
-                    ✗ Declined
-                  </button>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button onClick={() => update(r.id, "CONFIRMED")} style={{ flex: 1, background: "#38A169", color: "#fff", border: "none", padding: 9, borderRadius: 9, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>✓ Confirmed</button>
+                  <button onClick={() => update(r.id, "DECLINED")} style={{ flex: 1, border: "0.5px solid #FEB2B2", color: "#E53E3E", background: "#fff", padding: 9, borderRadius: 9, fontSize: 13, cursor: "pointer" }}>✗ Declined</button>
                 </div>
               )}
             </div>
-          ))
-        )}
-      </div>
-    </div>
+          ))}
+        </div>
+      }
+    </AdminLayout>
   );
 }

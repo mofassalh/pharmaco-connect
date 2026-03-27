@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { useLanguage } from "../../context/language";
+import { useLanguage } from "../../../context/language";
 
 export default function SettingsPage() {
   const { lang, setLang, t } = useLanguage();
@@ -19,21 +19,20 @@ export default function SettingsPage() {
         <div className="bg-white rounded-2xl border border-gray-100 p-5">
           <h3 className="font-bold text-gray-900 mb-4">{t("language")} / Language</h3>
           <div className="flex gap-3">
-            <button onClick={() => setLang("bn")}
+            <button
+              onClick={() => { setLang("bn"); window.location.href = "/customer/dashboard"; }}
               className={`flex-1 py-3 rounded-xl border-2 font-medium transition ${lang === "bn" ? "border-teal-400 bg-teal-50 text-teal-700" : "border-gray-200 text-gray-600"}`}>
               🇧🇩 বাংলা
             </button>
-            <button onClick={() => setLang("en")}
+            <button
+              onClick={() => { setLang("en"); window.location.href = "/customer/dashboard"; }}
               className={`flex-1 py-3 rounded-xl border-2 font-medium transition ${lang === "en" ? "border-teal-400 bg-teal-50 text-teal-700" : "border-gray-200 text-gray-600"}`}>
               🇬🇧 English
             </button>
           </div>
-          {lang === "en" && (
-            <p className="text-xs text-teal-600 mt-2 text-center">✓ Language changed to English</p>
-          )}
-          {lang === "bn" && (
-            <p className="text-xs text-teal-600 mt-2 text-center">✓ ভাষা বাংলায় পরিবর্তন হয়েছে</p>
-          )}
+          <p className="text-xs text-teal-600 mt-2 text-center">
+            {lang === "bn" ? "✓ বাংলা selected" : "✓ English selected"}
+          </p>
         </div>
 
         {/* Notification */}

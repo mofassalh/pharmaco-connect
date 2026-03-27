@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useLanguage } from "../../../context/language";
+import { useLanguage } from "../../context/language";
 
 const statusLabel: Record<string, Record<string, string>> = {
   bn: { PENDING: "অপেক্ষায়", SUBMITTED: "Submit হয়েছে", UNDER_REVIEW: "Review এ", APPROVED: "Approved", REJECTED: "Rejected", FULFILLED: "সম্পন্ন" },

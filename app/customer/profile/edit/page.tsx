@@ -1,45 +1,146 @@
 "use client";
-import { useState } from "react";
-import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+
 export default function EditProfilePage() {
+  const router = useRouter();
   const [form, setForm] = useState({
-    fullName: "Mofassal Hossain",
-    phone: "01712345678",
-    address: "বাড়ি ৫, রোড ১২, ধানমন্ডি, ঢাকা",
-    area: "ধানমন্ডি",
-    city: "ঢাকা"
+    fullName: "",
+    phone: "",
+    address: "",
+    area: "",
+    city: "",
   });
-  const h = (e: React.ChangeEvent<HTMLInputElement>) =>
-    setForm({ ...form, [e.target.name]: e.target.value });
-  return (
-    <div className="min-h-screen bg-gray-50 pb-10">
-      <div className="bg-white border-b px-6 py-4 flex items-center gap-3">
-        <Link href="/customer/profile" className="text-gray-400 hover:text-gray-600">←</Link>
-        <span className="font-bold text-gray-900">Profile Edit করুন</span>
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/me")
+      .then(r => r.json())
+      .then(data => {
+        setForm({
+          fullName: data.name || "",
+          phone: data.phone || "",
+          address: data.address || "",
+          area: data.area || "",
+          city: data.city || "",
+        });
+        setPhotoUrl(data.photoUrl || null);
+        setLoading(false);
+      });
+  }, []);
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", "pharmaco_upload");
+
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dl9qpcfe1";
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+      method: "POST",
+      body: formData,
+    });
+    const data = await res.json();
+    if (data.secure_url) {
+      setPhotoUrl(data.secure_url);
+    }
+    setUploading(false);
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    const res = await fetch("/api/me", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...form, photoUrl }),
+    });
+
+    if (res.ok) {
+      setSuccess(true);
+      setTimeout(() => router.push("/customer/profile"), 1500);
+    } else {
+      alert("কিছু একটা ভুল হয়েছে");
+    }
+    setSaving(false);
+  };
+
+  if (loading) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ color: "#a0aec0" }}>Loading...</div>
       </div>
-      <div className="max-w-2xl mx-auto px-4 py-6">
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4">
-          <div className="flex flex-col items-center mb-4">
-            <div className="w-20 h-20 rounded-full bg-teal-100 flex items-center justify-center text-3xl mb-3">👤</div>
-            <button className="text-sm text-teal-600 font-medium">ছবি পরিবর্তন করুন</button>
+    );
+  }
+
+  return (
+    <div style={{ background: "#efefef", minHeight: "100vh", fontFamily: "sans-serif", paddingBottom: 40 }}>
+
+      {/* Header */}
+      <div style={{ background: "#fff", borderBottom: "0.5px solid #e2e8f0", padding: "0 16px", height: 52, display: "flex", alignItems: "center", gap: 12, position: "sticky", top: 52, zIndex: 10 }}>
+        <button onClick={() => router.back()} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 18, color: "#a0aec0" }}>←</button>
+        <span style={{ fontWeight: 700, color: "#1a202c" }}>Profile Edit করুন</span>
+      </div>
+
+      <div style={{ maxWidth: 480, margin: "0 auto", padding: 16 }}>
+
+        {/* Photo Upload */}
+        <div style={{ background: "#fff", borderRadius: 12, border: "0.5px solid #e2e8f0", padding: 24, marginBottom: 16, textAlign: "center" }}>
+          <div style={{ position: "relative", display: "inline-block", marginBottom: 12 }}>
+            {photoUrl ? (
+              <img src={photoUrl} alt="Profile" style={{ width: 80, height: 80, borderRadius: "50%", objectFit: "cover", border: "2px solid #0D9488" }} />
+            ) : (
+              <div style={{ width: 80, height: 80, borderRadius: "50%", background: "#E6FFFA", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, margin: "0 auto" }}>👤</div>
+            )}
           </div>
+          <div>
+            <label style={{ cursor: "pointer", color: "#0D9488", fontWeight: 600, fontSize: 14 }}>
+              {uploading ? "Upload হচ্ছে..." : "📷 ছবি পরিবর্তন করুন"}
+              <input type="file" accept="image/*" onChange={handlePhotoUpload} style={{ display: "none" }} disabled={uploading} />
+            </label>
+          </div>
+        </div>
+
+        {/* Form */}
+        <div style={{ background: "#fff", borderRadius: 12, border: "0.5px solid #e2e8f0", padding: 16, marginBottom: 16 }}>
           {[
-            { label: "পুরো নাম", name: "fullName", type: "text" },
-            { label: "Phone নম্বর", name: "phone", type: "tel" },
-            { label: "ঠিকানা", name: "address", type: "text" },
-            { label: "এলাকা", name: "area", type: "text" },
-            { label: "শহর", name: "city", type: "text" },
+            { label: "পুরো নাম", key: "fullName", type: "text", placeholder: "আপনার নাম" },
+            { label: "Phone নম্বর", key: "phone", type: "tel", placeholder: "01XXXXXXXXX" },
+            { label: "ঠিকানা", key: "address", type: "text", placeholder: "বাড়ি, রোড নম্বর" },
+            { label: "এলাকা", key: "area", type: "text", placeholder: "যেমন: Mirpur" },
+            { label: "শহর", key: "city", type: "text", placeholder: "যেমন: Dhaka" },
           ].map((f, i) => (
-            <div key={i}>
-              <label className="block text-sm font-medium text-gray-700 mb-1">{f.label}</label>
-              <input type={f.type} name={f.name} value={form[f.name as keyof typeof form]} onChange={h}
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400" />
+            <div key={i} style={{ marginBottom: 14 }}>
+              <label style={{ fontSize: 12, fontWeight: 500, color: "#4a5568", display: "block", marginBottom: 6 }}>{f.label}</label>
+              <input
+                type={f.type}
+                value={form[f.key as keyof typeof form]}
+                onChange={e => setForm({ ...form, [f.key]: e.target.value })}
+                placeholder={f.placeholder}
+                style={{ width: "100%", border: "0.5px solid #e2e8f0", borderRadius: 10, padding: "10px 14px", fontSize: 14, boxSizing: "border-box" }}
+              />
             </div>
           ))}
-          <button className="w-full bg-teal-500 text-white py-3 rounded-xl font-medium hover:bg-teal-600 transition mt-2">
-            Save করুন ✓
-          </button>
         </div>
+
+        {success && (
+          <div style={{ background: "#E6FFFA", border: "0.5px solid #0D9488", color: "#0D9488", padding: "12px 16px", borderRadius: 10, marginBottom: 16, textAlign: "center", fontWeight: 600 }}>
+            ✅ Profile update হয়েছে!
+          </div>
+        )}
+
+        <button
+          onClick={handleSave}
+          disabled={saving || uploading}
+          style={{ width: "100%", background: saving ? "#a0aec0" : "#0D9488", color: "#fff", border: "none", padding: 16, borderRadius: 12, fontSize: 15, fontWeight: 700, cursor: saving ? "not-allowed" : "pointer" }}>
+          {saving ? "Save হচ্ছে..." : "✓ Save করুন"}
+        </button>
       </div>
     </div>
   );

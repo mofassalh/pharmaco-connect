@@ -97,9 +97,15 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
               style={{ flex: 1, padding: "8px", borderRadius: 8, border: "0.5px solid #e2e8f0", cursor: "pointer", fontSize: 12, fontWeight: 600, background: lang === "bn" ? "#0D9488" : "#fff", color: lang === "bn" ? "#fff" : "#4a5568" }}>
               🇧🇩 বাংলা
             </button>
-            <button onClick={() => handleLangChange("en")}
-              style={{ flex: 1, padding: "8px", borderRadius: 8, border: "0.5px solid #e2e8f0", cursor: "pointer", fontSize: 12, fontWeight: 600, background: lang === "en" ? "#0D9488" : "#fff", color: lang === "en" ? "#fff" : "#4a5568" }}>
-              🇬🇧 English
+            <button onClick={() => handleLangChange("bn")}
+  suppressHydrationWarning
+  style={{ padding: "4px 10px", borderRadius: 6, border: "none", cursor: "pointer", fontSize: 11, fontWeight: 700, background: lang === "bn" ? "#0D9488" : "transparent", color: lang === "bn" ? "#fff" : "#718096" }}>
+  বাং
+</button>
+<button onClick={() => handleLangChange("en")}
+  suppressHydrationWarning
+  style={{ padding: "4px 10px", borderRadius: 6, border: "none", cursor: "pointer", fontSize: 11, fontWeight: 700, background: lang === "en" ? "#0D9488" : "transparent", color: lang === "en" ? "#fff" : "#718096" }}>
+  EN
             </button>
           </div>
         </div>

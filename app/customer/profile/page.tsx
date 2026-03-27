@@ -34,11 +34,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
-      <div className="bg-white border-b px-6 py-4 flex items-center gap-3">
-        <Link href="/customer/dashboard" className="text-gray-400 hover:text-gray-600">←</Link>
-        <span className="font-bold text-gray-900">আমার Profile</span>
-      </div>
+    <div className="bg-gray-50 pb-4">
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
         <div className="bg-white rounded-2xl border border-gray-100 p-6">
           <div className="flex items-center gap-4 mb-6">
@@ -97,13 +93,6 @@ export default function ProfilePage() {
           className="w-full text-red-500 py-3 rounded-xl border border-red-100 font-medium hover:bg-red-50 transition">
           Logout
         </button>
-      </div>
-
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex justify-around py-3 z-10">
-        <Link href="/customer/dashboard" className="flex flex-col items-center text-gray-400 text-xs gap-1"><span className="text-xl">🏠</span>Home</Link>
-        <Link href="/customer/prescription/upload" className="flex flex-col items-center text-gray-400 text-xs gap-1"><span className="text-xl">📋</span>Prescription</Link>
-        <Link href="/customer/orders" className="flex flex-col items-center text-gray-400 text-xs gap-1"><span className="text-xl">📦</span>Orders</Link>
-        <Link href="/customer/profile" className="flex flex-col items-center text-teal-500 text-xs gap-1"><span className="text-xl">👤</span>Profile</Link>
       </div>
     </div>
   );

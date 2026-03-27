@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function ShopPage() {
   const [items, setItems] = useState<any[]>([]);
@@ -8,6 +9,7 @@ export default function ShopPage() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("ALL");
   const [cart, setCart] = useState<any[]>([]);
+  const router = useRouter();
 
   useEffect(() => {
     fetch("/api/inventory")
@@ -16,7 +18,16 @@ export default function ShopPage() {
         setItems(Array.isArray(data) ? data.filter((i: any) => i.isAvailable) : []);
         setLoading(false);
       });
+
+    // localStorage থেকে cart load করুন
+    const savedCart = localStorage.getItem("pharmaco-cart");
+    if (savedCart) setCart(JSON.parse(savedCart));
   }, []);
+
+  // cart যখনই change হবে localStorage এ save হবে
+  useEffect(() => {
+    localStorage.setItem("pharmaco-cart", JSON.stringify(cart));
+  }, [cart]);
 
   const categories = ["ALL", "GENERAL", "ANTIBIOTIC", "CARDIAC", "DIABETES", "RESPIRATORY", "PAIN_RELIEF", "VITAMIN"];
 
@@ -47,9 +58,8 @@ export default function ShopPage() {
     <div style={{ minHeight: "100vh", background: "#efefef", fontFamily: "sans-serif", paddingBottom: cart.length > 0 ? 100 : 24 }}>
 
       {/* Header */}
-      <div style={{ background: "#fff", borderBottom: "0.5px solid #e2e8f0", padding: "0 16px", height: 52, display: "flex", alignItems: "center", gap: 12, position: "sticky", top: 0, zIndex: 10 }}>
-        <Link href="/customer/profile" style={{ color: "#a0aec0", textDecoration: "none", fontSize: 18 }}>←</Link>
-        <span style={{ fontWeight: 700, color: "#1a202c", flex: 1 }}>Medicine কিনুন</span>
+      <div style={{ background: "#fff", borderBottom: "0.5px solid #e2e8f0", padding: "0 16px", height: 52, display: "flex", alignItems: "center", gap: 12, position: "sticky", top: 52, zIndex: 10 }}>
+        <span style={{ fontWeight: 700, color: "#1a202c", flex: 1 }}>💊 Medicine কিনুন</span>
         {cart.length > 0 && (
           <div style={{ background: "#0D9488", color: "#fff", padding: "4px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600 }}>
             🛒 {cart.length} টি
@@ -128,14 +138,16 @@ export default function ShopPage() {
 
       {/* Cart Bar */}
       {cart.length > 0 && (
-        <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "#0D9488", padding: "14px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", zIndex: 50 }}>
+        <div style={{ position: "fixed", bottom: 60, left: 0, right: 0, background: "#0D9488", padding: "14px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", zIndex: 50 }}>
           <div>
             <div style={{ color: "#fff", fontWeight: 600, fontSize: 14 }}>{cart.length} টি Medicine</div>
             <div style={{ color: "#9FE1CB", fontSize: 12 }}>মোট: ৳{totalAmount.toFixed(0)}</div>
           </div>
-          <Link href="/customer/checkout" style={{ background: "#fff", color: "#0D9488", padding: "10px 20px", borderRadius: 10, fontWeight: 700, fontSize: 14, textDecoration: "none" }}>
+          <button
+            onClick={() => router.push("/customer/checkout")}
+            style={{ background: "#fff", color: "#0D9488", padding: "10px 20px", borderRadius: 10, fontWeight: 700, fontSize: 14, border: "none", cursor: "pointer" }}>
             Order করুন →
-          </Link>
+          </button>
         </div>
       )}
     </div>

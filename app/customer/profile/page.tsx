@@ -72,6 +72,7 @@ export default function ProfilePage() {
 
         <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
           {[
+            { href: "/customer/prescription", icon: "📋", label: "আমার Prescriptions", sub: "সব prescription দেখুন" },
             { href: "/customer/profile/family", icon: "👨‍👩‍👧‍👦", label: "পরিবারের সদস্য", sub: "সদস্য যোগ করুন" },
             { href: "/customer/profile/billing", icon: "💳", label: "Billing ও বাকি টাকা", sub: "Payment history" },
             { href: "/customer/profile/refills", icon: "🔔", label: "Monthly Refill", sub: "নিয়মিত Medicine" },

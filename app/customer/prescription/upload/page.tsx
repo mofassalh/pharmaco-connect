@@ -46,9 +46,60 @@ export default function PrescriptionUpload() {
     setMedicines(medicines.filter((_, j) => j !== i));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+  setLoading(true);
+  try {
+    const user = await fetch("/api/me").then(r => r.json());
+    if (!user.id) {
+      alert("Login করুন");
+      return;
+    }
+
+    // Get customer ID
+    const customerRes = await fetch("/api/customer/me").then(r => r.json());
+
+    // Create prescription
+    const prescRes = await fetch("/api/prescriptions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        customerId: customerRes.id,
+        imageUrl: preview || "",
+        imageKey: "manual",
+        status: "SUBMITTED",
+        submittedAt: new Date().toISOString(),
+        customerNotes: notes,
+      }),
+    });
+    const prescription = await prescRes.json();
+
+    // Save medicines
+    if (medicines.length > 0 && prescription.id) {
+      await Promise.all(medicines.map(med =>
+        fetch("/api/prescriptions/" + prescription.id + "/medicines", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            prescriptionId: prescription.id,
+            medicineName: med.medicineName,
+            dosage: med.dosage,
+            frequency: med.frequency,
+            duration: med.duration,
+            quantity: med.quantity,
+            instructions: med.instructions,
+            isAiExtracted: true,
+          }),
+        })
+      ));
+    }
+
     setSubmitted(true);
-  };
+  } catch (err) {
+    alert("কিছু একটা ভুল হয়েছে");
+  } finally {
+    setLoading(false);
+  }
+};
 
   if (submitted) {
     return (

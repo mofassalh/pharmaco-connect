@@ -1,35 +1,36 @@
 "use client";
-import Link from "next/link";
+import { useLanguage } from "../../context/language";
+
 const meds = [
-  { name: "Napa 500mg", dosage: "500mg", frequency: "৩ বার দৈনিক", refillDay: 1, nextDue: "১ এপ্রিল ২০২৬", available: true },
-  { name: "Amlodipine 5mg", dosage: "5mg", frequency: "১ বার রাতে", refillDay: 5, nextDue: "৫ এপ্রিল ২০২৬", available: true },
-  { name: "Metformin 500mg", dosage: "500mg", frequency: "২ বার দৈনিক", refillDay: 10, nextDue: "১০ এপ্রিল ২০২৬", available: false },
+  { name: "Napa 500mg", dosage: "500mg", frequency: "৩ বার দৈনিক", nextDue: "১ এপ্রিল ২০২৬", available: true },
+  { name: "Amlodipine 5mg", dosage: "5mg", frequency: "১ বার রাতে", nextDue: "৫ এপ্রিল ২০২৬", available: true },
+  { name: "Metformin 500mg", dosage: "500mg", frequency: "২ বার দৈনিক", nextDue: "১০ এপ্রিল ২০২৬", available: false },
 ];
+
 export default function MedicinesPage() {
+  const { lang, t } = useLanguage();
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b px-6 py-4 flex items-center gap-3">
-        <Link href="/customer/dashboard" className="text-gray-400 hover:text-gray-600">←</Link>
-        <span className="font-bold text-gray-900">নিয়মিত Medicine</span>
-      </div>
-      <div className="max-w-2xl mx-auto px-6 py-8 space-y-4">
+    <div style={{ padding: 16, maxWidth: 600, margin: "0 auto" }}>
+      <h1 style={{ fontSize: 18, fontWeight: 700, color: "#1a202c", marginBottom: 16 }}>
+        {lang === "en" ? "My Medicines" : "নিয়মিত Medicine"}
+      </h1>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {meds.map((med, i) => (
-          <div key={i} className="bg-white rounded-2xl border border-gray-100 p-5">
-            <div className="flex items-center justify-between mb-2">
-              <span className="font-bold text-gray-900">💊 {med.name}</span>
-              <span className={`text-xs px-3 py-1 rounded-full font-medium ${med.available ? "bg-green-50 text-green-600" : "bg-red-50 text-red-500"}`}>
-                {med.available ? "Available" : "Stock নেই"}
+          <div key={i} style={{ background: "#fff", border: "0.5px solid #e8ecf0", borderRadius: 12, padding: 14 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+              <span style={{ fontWeight: 700, fontSize: 14, color: "#1a202c" }}>💊 {med.name}</span>
+              <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 20, fontWeight: 600, background: med.available ? "#F0FFF4" : "#FFF5F5", color: med.available ? "#276749" : "#C53030" }}>
+                {med.available ? t("available") : t("outOfStock")}
               </span>
             </div>
-            <div className="text-sm text-gray-500 mb-3">{med.dosage} · {med.frequency}</div>
-            <div className="flex items-center gap-2 text-sm bg-teal-50 text-teal-700 px-3 py-2 rounded-lg">
-              <span>🔔</span>
-              <span>পরের refill: {med.nextDue}</span>
+            <div style={{ fontSize: 12, color: "#718096", marginBottom: 8 }}>{med.dosage} · {med.frequency}</div>
+            <div style={{ background: "#E6FFFA", color: "#0D9488", fontSize: 12, padding: "6px 10px", borderRadius: 8 }}>
+              🔔 {lang === "en" ? "Next refill:" : "পরের refill:"} {med.nextDue}
             </div>
           </div>
         ))}
-        <button className="w-full border-2 border-dashed border-teal-300 text-teal-600 py-4 rounded-2xl font-medium hover:border-teal-500 transition">
-          + নতুন নিয়মিত Medicine যোগ করুন
+        <button style={{ width: "100%", border: "2px dashed #5DCAA5", color: "#0D9488", background: "none", padding: 14, borderRadius: 12, fontSize: 13, fontWeight: 500, cursor: "pointer" }}>
+          + {lang === "en" ? "Add Regular Medicine" : "নতুন নিয়মিত Medicine যোগ করুন"}
         </button>
       </div>
     </div>

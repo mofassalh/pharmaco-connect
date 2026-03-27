@@ -15,7 +15,12 @@ const menuItems = [
 export default function CustomerLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
-  const { lang, t } = useLanguage();
+  const { lang, setLang, t } = useLanguage();
+
+  const handleLangChange = (newLang: "bn" | "en") => {
+    setLang(newLang);
+    setTimeout(() => window.location.reload(), 100);
+  };
 
   return (
     <div style={{ minHeight: "100vh", background: "#efefef", fontFamily: "sans-serif" }}>
@@ -33,13 +38,13 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={{ display: "flex", background: "#f7fafc", borderRadius: 8, padding: 3 }}>
-            <button onClick={() => { localStorage.setItem("lang", "bn"); window.location.reload(); }}
-              style={{ padding: "3px 10px", borderRadius: 6, border: "none", cursor: "pointer", fontSize: 11, fontWeight: 600, background: lang === "bn" ? "#0D9488" : "transparent", color: lang === "bn" ? "#fff" : "#718096" }}>
+          <div style={{ display: "flex", background: "#f7fafc", borderRadius: 8, padding: 3, border: "0.5px solid #e2e8f0" }}>
+            <button onClick={() => handleLangChange("bn")}
+              style={{ padding: "4px 10px", borderRadius: 6, border: "none", cursor: "pointer", fontSize: 11, fontWeight: 700, background: lang === "bn" ? "#0D9488" : "transparent", color: lang === "bn" ? "#fff" : "#718096", transition: "all 0.15s" }}>
               বাং
             </button>
-            <button onClick={() => { localStorage.setItem("lang", "en"); window.location.reload(); }}
-              style={{ padding: "3px 10px", borderRadius: 6, border: "none", cursor: "pointer", fontSize: 11, fontWeight: 600, background: lang === "en" ? "#0D9488" : "transparent", color: lang === "en" ? "#fff" : "#718096" }}>
+            <button onClick={() => handleLangChange("en")}
+              style={{ padding: "4px 10px", borderRadius: 6, border: "none", cursor: "pointer", fontSize: 11, fontWeight: 700, background: lang === "en" ? "#0D9488" : "transparent", color: lang === "en" ? "#fff" : "#718096", transition: "all 0.15s" }}>
               EN
             </button>
           </div>
@@ -60,27 +65,49 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
         transform: sidebarOpen ? "translateX(0)" : "translateX(-100%)",
         transition: "transform 0.25s ease",
         zIndex: 200, overflowY: "auto",
+        display: "flex", flexDirection: "column",
       }}>
-        <div style={{ padding: "12px 8px" }}>
-          {menuItems.map((item, i) => (
-            <Link key={i} href={item.href}
-              onClick={() => setSidebarOpen(false)}
-              style={{
-                display: "flex", alignItems: "center", gap: 12,
-                padding: "11px 12px", borderRadius: 10, marginBottom: 3,
-                color: pathname === item.href || pathname.startsWith(item.href + "/") ? "#0D9488" : "#4a5568",
-                background: pathname === item.href || pathname.startsWith(item.href + "/") ? "#E6FFFA" : "transparent",
-                textDecoration: "none", fontSize: 14, fontWeight: 500,
-              }}>
-              <span style={{ fontSize: 18 }}>{item.icon}</span>
-              <span>{lang === "en" ? item.labelEn : item.labelBn}</span>
-            </Link>
-          ))}
+        <div style={{ padding: "12px 8px", flex: 1 }}>
+          {menuItems.map((item, i) => {
+            const active = pathname === item.href || pathname.startsWith(item.href + "/");
+            return (
+              <Link key={i} href={item.href}
+                onClick={() => setSidebarOpen(false)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 12,
+                  padding: "11px 12px", borderRadius: 10, marginBottom: 3,
+                  color: active ? "#0D9488" : "#4a5568",
+                  background: active ? "#E6FFFA" : "transparent",
+                  textDecoration: "none", fontSize: 14, fontWeight: 500,
+                }}>
+                <span style={{ fontSize: 18 }}>{item.icon}</span>
+                <span>{lang === "en" ? item.labelEn : item.labelBn}</span>
+              </Link>
+            );
+          })}
         </div>
-        <div style={{ padding: "12px 20px", borderTop: "0.5px solid #e2e8f0", marginTop: 8 }}>
+
+        {/* Language in sidebar too */}
+        <div style={{ padding: "12px 16px", borderTop: "0.5px solid #e2e8f0" }}>
+          <div style={{ fontSize: 11, color: "#a0aec0", marginBottom: 8 }}>
+            {lang === "bn" ? "ভাষা পরিবর্তন" : "Change Language"}
+          </div>
+          <div style={{ display: "flex", gap: 6 }}>
+            <button onClick={() => handleLangChange("bn")}
+              style={{ flex: 1, padding: "8px", borderRadius: 8, border: "0.5px solid #e2e8f0", cursor: "pointer", fontSize: 12, fontWeight: 600, background: lang === "bn" ? "#0D9488" : "#fff", color: lang === "bn" ? "#fff" : "#4a5568" }}>
+              🇧🇩 বাংলা
+            </button>
+            <button onClick={() => handleLangChange("en")}
+              style={{ flex: 1, padding: "8px", borderRadius: 8, border: "0.5px solid #e2e8f0", cursor: "pointer", fontSize: 12, fontWeight: 600, background: lang === "en" ? "#0D9488" : "#fff", color: lang === "en" ? "#fff" : "#4a5568" }}>
+              🇬🇧 English
+            </button>
+          </div>
+        </div>
+
+        <div style={{ padding: "12px 16px", borderTop: "0.5px solid #e2e8f0" }}>
           <button
             onClick={async () => { await fetch("/api/logout", { method: "POST" }); window.location.href = "/login"; }}
-            style={{ width: "100%", color: "#E53E3E", background: "none", border: "0.5px solid #FEB2B2", padding: "10px", borderRadius: 10, fontSize: 14, cursor: "pointer", fontWeight: 500 }}>
+            style={{ width: "100%", color: "#E53E3E", background: "none", border: "0.5px solid #FEB2B2", padding: "10px", borderRadius: 10, fontSize: 13, cursor: "pointer", fontWeight: 500 }}>
             {lang === "en" ? "Logout" : "Logout"}
           </button>
         </div>
@@ -91,8 +118,8 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
         {children}
       </div>
 
-      {/* Bottom Navigation (Mobile) */}
-      <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "#fff", borderTop: "0.5px solid #e2e8f0", display: "flex", justifyContent: "space-around", padding: "8px 0", zIndex: 50 }}>
+      {/* Bottom Navigation */}
+      <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "#fff", borderTop: "0.5px solid #e2e8f0", display: "flex", justifyContent: "space-around", padding: "8px 0 4px", zIndex: 50 }}>
         {menuItems.map((item, i) => {
           const active = pathname === item.href || pathname.startsWith(item.href + "/");
           return (
@@ -102,7 +129,7 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
               textDecoration: "none", fontSize: 10, gap: 2, flex: 1,
             }}>
               <span style={{ fontSize: 20 }}>{item.icon}</span>
-              <span>{lang === "en" ? item.labelEn : item.labelBn}</span>
+              <span style={{ fontWeight: active ? 600 : 400 }}>{lang === "en" ? item.labelEn : item.labelBn}</span>
             </Link>
           );
         })}

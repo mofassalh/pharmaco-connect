@@ -90,7 +90,7 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
         {/* Language in sidebar too */}
         <div style={{ padding: "12px 16px", borderTop: "0.5px solid #e2e8f0" }}>
           <div style={{ fontSize: 11, color: "#a0aec0", marginBottom: 8 }}>
-            {lang === "bn" ? "ভাষা পরিবর্তন" : "Change Language"}
+            {"ভাষা / Language"}
           </div>
           <div style={{ display: "flex", gap: 6 }}>
             <button onClick={() => handleLangChange("bn")}

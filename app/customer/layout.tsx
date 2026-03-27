@@ -124,22 +124,7 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
         {children}
       </div>
 
-      {/* Bottom Navigation */}
-      <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "#fff", borderTop: "0.5px solid #e2e8f0", display: "flex", justifyContent: "space-around", padding: "8px 0 4px", zIndex: 50 }}>
-        {menuItems.map((item, i) => {
-          const active = pathname === item.href || pathname.startsWith(item.href + "/");
-          return (
-            <Link key={i} href={item.href} style={{
-              display: "flex", flexDirection: "column", alignItems: "center",
-              color: active ? "#0D9488" : "#a0aec0",
-              textDecoration: "none", fontSize: 10, gap: 2, flex: 1,
-            }}>
-              <span style={{ fontSize: 20 }}>{item.icon}</span>
-              <span style={{ fontWeight: active ? 600 : 400 }}>{lang === "en" ? item.labelEn : item.labelBn}</span>
-            </Link>
-          );
-        })}
-      </div>
+      
     </div>
   );
 }

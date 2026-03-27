@@ -120,10 +120,11 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
       </div>
 
       {/* Main Content */}
-      <div style={{ paddingBottom: 70 }}>
+      <div style={{ paddingBottom: 16 }}>
         {children}
       </div>
 
+      {/* Bottom Navigation */}
       
     </div>
   );

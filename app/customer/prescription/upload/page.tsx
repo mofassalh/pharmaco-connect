@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 interface Medicine {
   medicineName: string;
@@ -11,28 +11,56 @@ interface Medicine {
 }
 
 export default function PrescriptionUpload() {
+  const router = useRouter();
+  const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [medicines, setMedicines] = useState<Medicine[]>([]);
   const [submitted, setSubmitted] = useState(false);
   const [notes, setNotes] = useState("");
+  const [uploadedUrl, setUploadedUrl] = useState("");
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setPreview(URL.createObjectURL(file));
+    const f = e.target.files?.[0];
+    if (!f) return;
+    setFile(f);
+    setPreview(URL.createObjectURL(f));
     setMedicines([]);
     setSubmitted(false);
   };
 
   const handleAI = async () => {
+    if (!file) return;
     setLoading(true);
-    await new Promise(r => setTimeout(r, 2500));
-    setMedicines([
-      { medicineName: "Napa 500mg", dosage: "500mg", frequency: "৩ বার দৈনিক", duration: "৫ দিন", quantity: 15 },
-      { medicineName: "Amoxicillin 250mg", dosage: "250mg", frequency: "২ বার দৈনিক", duration: "৭ দিন", quantity: 14 },
-      { medicineName: "Omeprazole 20mg", dosage: "20mg", frequency: "১ বার সকালে", duration: "১০ দিন", quantity: 10 },
-    ]);
+
+    try {
+      // Cloudinary তে upload করুন
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", "pharmaco_upload");
+
+      const cloudRes = await fetch(`https://api.cloudinary.com/v1_1/dl9qpcfe1/image/upload`, {
+        method: "POST",
+        body: formData,
+      });
+      const cloudData = await cloudRes.json();
+      const imageUrl = cloudData.secure_url;
+      setUploadedUrl(imageUrl);
+
+      // AI দিয়ে prescription পড়ুন
+      const aiRes = await fetch("/api/prescriptions/scan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageUrl }),
+      });
+      const aiData = await aiRes.json();
+
+      if (aiData.medicines) {
+        setMedicines(aiData.medicines);
+      }
+    } catch {
+      alert("কিছু একটা ভুল হয়েছে");
+    }
     setLoading(false);
   };
 
@@ -42,113 +70,92 @@ export default function PrescriptionUpload() {
     setMedicines(updated);
   };
 
-  const removeMed = (i: number) => {
-    setMedicines(medicines.filter((_, j) => j !== i));
-  };
+  const removeMed = (i: number) => setMedicines(medicines.filter((_, j) => j !== i));
 
   const handleSubmit = async () => {
-  setLoading(true);
-  try {
-    const user = await fetch("/api/me").then(r => r.json());
-    if (!user.id) {
-      alert("Login করুন");
-      return;
+    setLoading(true);
+    try {
+      const prescRes = await fetch("/api/prescriptions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          imageUrl: uploadedUrl || preview || "",
+          imageKey: "cloudinary",
+          status: "SUBMITTED",
+          submittedAt: new Date().toISOString(),
+          customerNotes: notes,
+        }),
+      });
+      const prescription = await prescRes.json();
+
+      if (medicines.length > 0 && prescription.id) {
+        await Promise.all(medicines.map(med =>
+          fetch(`/api/prescriptions/${prescription.id}/medicines`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...med, isAiExtracted: true }),
+          })
+        ));
+      }
+      setSubmitted(true);
+    } catch {
+      alert("কিছু একটা ভুল হয়েছে");
     }
-
-    // Get customer ID
-    const customerRes = await fetch("/api/customer/me").then(r => r.json());
-
-    // Create prescription
-    const prescRes = await fetch("/api/prescriptions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        customerId: customerRes.id,
-        imageUrl: preview || "",
-        imageKey: "manual",
-        status: "SUBMITTED",
-        submittedAt: new Date().toISOString(),
-        customerNotes: notes,
-      }),
-    });
-    const prescription = await prescRes.json();
-
-    // Save medicines
-    if (medicines.length > 0 && prescription.id) {
-      await Promise.all(medicines.map(med =>
-        fetch("/api/prescriptions/" + prescription.id + "/medicines", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            prescriptionId: prescription.id,
-            medicineName: med.medicineName,
-            dosage: med.dosage,
-            frequency: med.frequency,
-            duration: med.duration,
-            quantity: med.quantity,
-            instructions: med.instructions,
-            isAiExtracted: true,
-          }),
-        })
-      ));
-    }
-
-    setSubmitted(true);
-  } catch (err) {
-    alert("কিছু একটা ভুল হয়েছে");
-  } finally {
     setLoading(false);
-  }
-};
+  };
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-        <div className="bg-white rounded-2xl border border-gray-100 p-8 max-w-sm w-full text-center">
-          <div className="text-5xl mb-4">✅</div>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">Prescription Submit হয়েছে!</h2>
-          <p className="text-gray-500 text-sm mb-6">Admin review করবেন এবং আপনাকে জানানো হবে।</p>
-          <Link href="/customer/dashboard" className="block w-full bg-teal-500 text-white py-3 rounded-xl font-medium hover:bg-teal-600 transition">
+      <div style={{ minHeight: "100vh", background: "#f7f8fa", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "sans-serif" }}>
+        <div style={{ background: "#fff", borderRadius: 20, padding: 40, maxWidth: 320, width: "100%", textAlign: "center", boxShadow: "0 4px 20px rgba(0,0,0,0.08)" }}>
+          <div style={{ fontSize: 64, marginBottom: 16 }}>✅</div>
+          <h2 style={{ fontSize: 20, fontWeight: 700, color: "#1a202c", marginBottom: 8 }}>Submit হয়েছে!</h2>
+          <p style={{ color: "#718096", fontSize: 14, marginBottom: 24 }}>Admin review করবেন এবং আপনাকে জানানো হবে।</p>
+          <button onClick={() => router.push("/customer/dashboard")}
+            style={{ width: "100%", background: "#0D9488", color: "#fff", border: "none", padding: "14px", borderRadius: 12, fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
             Dashboard এ যান
-          </Link>
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
-      <div className="bg-white border-b px-6 py-4 flex items-center gap-3">
-        <Link href="/customer/dashboard" className="text-gray-400 hover:text-gray-600">←</Link>
-        <span className="font-bold text-gray-900">Prescription Upload</span>
+    <div style={{ background: "#f7f8fa", minHeight: "100vh", fontFamily: "sans-serif", paddingBottom: 32 }}>
+
+      {/* Sub Header */}
+      <div style={{ background: "#fff", borderBottom: "0.5px solid #e2e8f0", padding: "0 16px", height: 48, display: "flex", alignItems: "center", gap: 12, position: "sticky", top: 56, zIndex: 10 }}>
+        <button onClick={() => router.back()} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 20, color: "#a0aec0" }}>←</button>
+        <span style={{ fontWeight: 700, color: "#1a202c", fontSize: 15 }}>📋 Prescription Upload</span>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
+      <div style={{ maxWidth: 600, margin: "0 auto", padding: 16 }}>
 
         {/* Step 1 */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-7 h-7 rounded-full bg-teal-500 text-white flex items-center justify-center text-sm font-bold">1</div>
-            <h2 className="font-bold text-gray-900">Prescription এর ছবি তুলুন</h2>
+        <div style={{ background: "#fff", borderRadius: 14, border: "0.5px solid #e2e8f0", padding: 20, marginBottom: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+            <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#0D9488", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13 }}>1</div>
+            <span style={{ fontWeight: 700, fontSize: 15, color: "#1a202c" }}>Prescription এর ছবি তুলুন</span>
           </div>
+
           {!preview ? (
-            <label className="border-2 border-dashed border-teal-300 rounded-xl p-8 flex flex-col items-center cursor-pointer hover:border-teal-500 transition">
-              <span className="text-4xl mb-3">📷</span>
-              <span className="text-gray-600 font-medium">ছবি select করুন বা তুলুন</span>
-              <span className="text-gray-400 text-xs mt-1">JPG, PNG — সর্বোচ্চ 10MB</span>
-              <input type="file" accept="image/*" className="hidden" onChange={handleFile} />
+            <label style={{ border: "2px dashed #b2f5ea", borderRadius: 14, padding: 32, display: "flex", flexDirection: "column", alignItems: "center", cursor: "pointer", background: "#f0fdf9" }}>
+              <span style={{ fontSize: 48, marginBottom: 12 }}>📷</span>
+              <span style={{ fontWeight: 600, color: "#1a202c", fontSize: 15 }}>ছবি select করুন</span>
+              <span style={{ color: "#a0aec0", fontSize: 12, marginTop: 4 }}>JPG, PNG — সর্বোচ্চ 10MB</span>
+              <input type="file" accept="image/*" style={{ display: "none" }} onChange={handleFile} />
             </label>
           ) : (
-            <div className="space-y-3">
-              <img src={preview} alt="prescription" className="w-full rounded-xl border max-h-64 object-contain" />
-              <div className="flex gap-2">
+            <div>
+              <img src={preview} alt="prescription" style={{ width: "100%", borderRadius: 12, border: "0.5px solid #e2e8f0", maxHeight: 280, objectFit: "contain", marginBottom: 12 }} />
+              <div style={{ display: "flex", gap: 10 }}>
                 <button onClick={handleAI} disabled={loading}
-                  className="flex-1 bg-teal-500 text-white py-3 rounded-xl font-medium hover:bg-teal-600 disabled:opacity-50 transition">
+                  style={{ flex: 1, background: loading ? "#a0aec0" : "#0D9488", color: "#fff", border: "none", padding: "12px", borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: loading ? "not-allowed" : "pointer" }}>
                   {loading ? "AI পড়ছে... ⏳" : "✨ AI দিয়ে পড়ুন"}
                 </button>
-                <label className="px-4 py-3 border border-gray-200 rounded-xl text-gray-600 cursor-pointer hover:bg-gray-50 transition text-sm">
+                <label style={{ padding: "12px 16px", border: "0.5px solid #e2e8f0", borderRadius: 10, color: "#4a5568", cursor: "pointer", fontSize: 13, fontWeight: 500, background: "#fff" }}>
                   পরিবর্তন
-                  <input type="file" accept="image/*" className="hidden" onChange={handleFile} />
+                  <input type="file" accept="image/*" style={{ display: "none" }} onChange={handleFile} />
                 </label>
               </div>
             </div>
@@ -157,86 +164,61 @@ export default function PrescriptionUpload() {
 
         {/* Step 2 - Medicine List */}
         {medicines.length > 0 && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-7 h-7 rounded-full bg-teal-500 text-white flex items-center justify-center text-sm font-bold">2</div>
-              <h2 className="font-bold text-gray-900">Medicine তালিকা চেক করুন</h2>
+          <div style={{ background: "#fff", borderRadius: 14, border: "0.5px solid #e2e8f0", padding: 20, marginBottom: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+              <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#0D9488", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13 }}>2</div>
+              <span style={{ fontWeight: 700, fontSize: 15, color: "#1a202c" }}>Medicine তালিকা চেক করুন</span>
             </div>
-            <p className="text-xs text-gray-400 mb-4">AI এই তালিকা তৈরি করেছে — ভুল থাকলে edit করুন</p>
-            <div className="space-y-3">
-              {medicines.map((med, i) => (
-                <div key={i} className="border border-gray-100 rounded-xl p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <input
-                      value={med.medicineName}
-                      onChange={e => updateMed(i, "medicineName", e.target.value)}
-                      className="font-medium text-gray-900 bg-transparent border-b border-gray-200 focus:outline-none focus:border-teal-400 flex-1 mr-2"
-                    />
-                    <button onClick={() => removeMed(i)} className="text-red-400 hover:text-red-600 text-sm">✕</button>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    {[
-                      { label: "Dosage", field: "dosage" },
-                      { label: "Frequency", field: "frequency" },
-                      { label: "Duration", field: "duration" },
-                      { label: "Quantity", field: "quantity" },
-                    ].map((f, j) => (
-                      <div key={j}>
-                        <div className="text-xs text-gray-400 mb-1">{f.label}</div>
-                        <input
-                          value={String(med[f.field as keyof Medicine])}
-                          onChange={e => updateMed(i, f.field, e.target.value)}
-                          className="w-full text-sm border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-teal-400"
-                        />
-                      </div>
-                    ))}
-                  </div>
+            <p style={{ fontSize: 12, color: "#a0aec0", marginBottom: 16 }}>AI এই তালিকা তৈরি করেছে — ভুল থাকলে edit করুন</p>
+
+            {medicines.map((med, i) => (
+              <div key={i} style={{ border: "0.5px solid #e2e8f0", borderRadius: 12, padding: 14, marginBottom: 10 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                  <input value={med.medicineName} onChange={e => updateMed(i, "medicineName", e.target.value)}
+                    style={{ fontWeight: 700, fontSize: 14, color: "#1a202c", border: "none", borderBottom: "1px solid #e2e8f0", flex: 1, marginRight: 10, padding: "4px 0", outline: "none", background: "transparent" }} />
+                  <button onClick={() => removeMed(i)} style={{ background: "none", border: "none", color: "#FC8181", cursor: "pointer", fontSize: 16, fontWeight: 700 }}>✕</button>
                 </div>
-              ))}
-            </div>
-            <button
-              onClick={() => setMedicines([...medicines, { medicineName: "", dosage: "", frequency: "", duration: "", quantity: 1 }])}
-              className="w-full border-2 border-dashed border-gray-200 text-gray-400 py-3 rounded-xl text-sm mt-3 hover:border-teal-300 hover:text-teal-500 transition">
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                  {[
+                    { label: "Dosage", field: "dosage" },
+                    { label: "Frequency", field: "frequency" },
+                    { label: "Duration", field: "duration" },
+                    { label: "Quantity", field: "quantity" },
+                  ].map((f, j) => (
+                    <div key={j}>
+                      <div style={{ fontSize: 11, color: "#a0aec0", marginBottom: 4 }}>{f.label}</div>
+                      <input value={String(med[f.field as keyof Medicine])} onChange={e => updateMed(i, f.field, e.target.value)}
+                        style={{ width: "100%", fontSize: 13, border: "0.5px solid #e2e8f0", borderRadius: 8, padding: "7px 10px", boxSizing: "border-box", outline: "none" }} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+
+            <button onClick={() => setMedicines([...medicines, { medicineName: "", dosage: "", frequency: "", duration: "", quantity: 1 }])}
+              style={{ width: "100%", border: "2px dashed #e2e8f0", background: "transparent", color: "#a0aec0", padding: "12px", borderRadius: 10, fontSize: 13, cursor: "pointer", fontWeight: 500 }}>
               + Medicine যোগ করুন
             </button>
           </div>
         )}
 
-        {/* Step 3 - Notes & Submit */}
+        {/* Step 3 */}
         {medicines.length > 0 && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-7 h-7 rounded-full bg-teal-500 text-white flex items-center justify-center text-sm font-bold">3</div>
-              <h2 className="font-bold text-gray-900">কোনো বিশেষ নির্দেশনা?</h2>
+          <div style={{ background: "#fff", borderRadius: 14, border: "0.5px solid #e2e8f0", padding: 20 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+              <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#0D9488", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13 }}>3</div>
+              <span style={{ fontWeight: 700, fontSize: 15, color: "#1a202c" }}>বিশেষ নির্দেশনা</span>
             </div>
-            <textarea
-              value={notes}
-              onChange={e => setNotes(e.target.value)}
+            <textarea value={notes} onChange={e => setNotes(e.target.value)}
               placeholder="যেমন: বাড়িতে deliver করুন, সন্ধ্যার আগে লাগবে..."
-              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 resize-none h-24 mb-4"
-            />
-            <button onClick={handleSubmit}
-              className="w-full bg-teal-500 text-white py-3 rounded-xl font-bold hover:bg-teal-600 transition">
-              Submit করুন →
+              rows={3}
+              style={{ width: "100%", border: "0.5px solid #e2e8f0", borderRadius: 10, padding: "12px 14px", fontSize: 14, resize: "none", boxSizing: "border-box", outline: "none", marginBottom: 16 }} />
+            <button onClick={handleSubmit} disabled={loading}
+              style={{ width: "100%", background: loading ? "#a0aec0" : "#0D9488", color: "#fff", border: "none", padding: "14px", borderRadius: 12, fontSize: 15, fontWeight: 700, cursor: loading ? "not-allowed" : "pointer" }}>
+              {loading ? "Submit হচ্ছে..." : "Submit করুন →"}
             </button>
           </div>
         )}
-      </div>
-
-      {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex justify-around py-3 z-10">
-        <Link href="/customer/dashboard" className="flex flex-col items-center text-gray-400 text-xs gap-1">
-          <span className="text-xl">🏠</span>Home
-        </Link>
-        <Link href="/customer/prescription/upload" className="flex flex-col items-center text-teal-500 text-xs gap-1">
-          <span className="text-xl">📋</span>Prescription
-        </Link>
-        <Link href="/customer/orders" className="flex flex-col items-center text-gray-400 text-xs gap-1">
-          <span className="text-xl">📦</span>Orders
-        </Link>
-        <Link href="/customer/profile" className="flex flex-col items-center text-gray-400 text-xs gap-1">
-          <span className="text-xl">👤</span>Profile
-        </Link>
       </div>
     </div>
   );

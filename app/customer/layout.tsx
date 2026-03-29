@@ -151,7 +151,7 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
 
         {/* Main Content */}
         <div style={{ flex: 1, padding: "20px", minWidth: 0 }}>
-          <div style={{ maxWidth: 800, margin: "0 auto" }}>
+          <div style={{ maxWidth: 1200, margin: "0 auto" }}>
             {children}
           </div>
         </div>

@@ -27,22 +27,17 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
 
       {/* Top Nav */}
       <div style={{
-        background: "#fff",
-        borderBottom: "0.5px solid #e2e8f0",
-        padding: "0 16px",
-        height: 56,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        position: "sticky",
-        top: 0,
-        zIndex: 100,
+        background: "#fff", borderBottom: "0.5px solid #e2e8f0",
+        padding: "0 20px", height: 56,
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        position: "sticky", top: 0, zIndex: 100,
         boxShadow: "0 1px 4px rgba(0,0,0,0.04)"
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            style={{ background: "none", border: "none", cursor: "pointer", fontSize: 22, padding: 4, color: "#4a5568", lineHeight: 1 }}>
+          {/* Mobile hamburger — only on small screens */}
+          <button onClick={() => setSidebarOpen(!sidebarOpen)}
+            style={{ background: "none", border: "none", cursor: "pointer", fontSize: 22, color: "#4a5568", display: "block" }}
+            className="mobile-menu-btn">
             ☰
           </button>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -50,7 +45,6 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
             <span style={{ fontWeight: 700, color: "#1a202c", fontSize: 15 }}>Pharmaco Connect</span>
           </div>
         </div>
-
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ display: "flex", background: "#f7fafc", borderRadius: 8, padding: 3, border: "0.5px solid #e2e8f0" }}>
             <button onClick={() => handleLangChange("bn")}
@@ -66,74 +60,114 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
         </div>
       </div>
 
-      {/* Sidebar Overlay */}
-      {sidebarOpen && (
-        <div
-          onClick={() => setSidebarOpen(false)}
-          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.35)", zIndex: 199, top: 56 }} />
-      )}
+      <div style={{ display: "flex", minHeight: "calc(100vh - 56px)" }}>
 
-      {/* Sidebar */}
-      <div style={{
-        position: "fixed", top: 56, left: 0, bottom: 0, width: 260,
-        background: "#fff", borderRight: "0.5px solid #e2e8f0",
-        transform: sidebarOpen ? "translateX(0)" : "translateX(-100%)",
-        transition: "transform 0.25s ease",
-        zIndex: 200, overflowY: "auto",
-        display: "flex", flexDirection: "column",
-        boxShadow: sidebarOpen ? "4px 0 20px rgba(0,0,0,0.08)" : "none",
-      }}>
-        <div style={{ padding: "16px 10px", flex: 1 }}>
-          {menuItems.map((item, i) => {
-            const active = pathname === item.href || pathname.startsWith(item.href + "/");
-            return (
-              <Link key={i} href={item.href}
-                onClick={() => setSidebarOpen(false)}
-                style={{
-                  display: "flex", alignItems: "center", gap: 12,
-                  padding: "12px 14px", borderRadius: 10, marginBottom: 4,
-                  color: active ? "#0D9488" : "#4a5568",
-                  background: active ? "#E6FFFA" : "transparent",
-                  textDecoration: "none", fontSize: 14, fontWeight: 500,
-                  transition: "all 0.15s",
-                }}>
-                <span style={{ fontSize: 20 }}>{item.icon}</span>
-                <span>{lang === "en" ? item.labelEn : item.labelBn}</span>
-              </Link>
-            );
-          })}
-        </div>
-
-        {/* Language */}
-        <div style={{ padding: "14px 16px", borderTop: "0.5px solid #e2e8f0" }}>
-          <div style={{ fontSize: 11, color: "#a0aec0", marginBottom: 8 }}>ভাষা / Language</div>
-          <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={() => handleLangChange("bn")}
-              style={{ flex: 1, padding: "9px", borderRadius: 8, border: "0.5px solid #e2e8f0", cursor: "pointer", fontSize: 13, fontWeight: 600, background: lang === "bn" ? "#0D9488" : "#fff", color: lang === "bn" ? "#fff" : "#4a5568" }}>
-              🇧🇩 বাংলা
-            </button>
-            <button onClick={() => handleLangChange("en")}
-              style={{ flex: 1, padding: "9px", borderRadius: 8, border: "0.5px solid #e2e8f0", cursor: "pointer", fontSize: 13, fontWeight: 600, background: lang === "en" ? "#0D9488" : "#fff", color: lang === "en" ? "#fff" : "#4a5568" }}>
-              🇬🇧 English
+        {/* Desktop Sidebar — always visible on large screens */}
+        <div style={{
+          width: 240, background: "#fff", borderRight: "0.5px solid #e2e8f0",
+          display: "flex", flexDirection: "column",
+          position: "sticky", top: 56, height: "calc(100vh - 56px)",
+          overflowY: "auto", flexShrink: 0,
+        }} className="desktop-sidebar">
+          <div style={{ padding: "16px 10px", flex: 1 }}>
+            {menuItems.map((item, i) => {
+              const active = pathname === item.href || pathname.startsWith(item.href + "/");
+              return (
+                <Link key={i} href={item.href}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 12,
+                    padding: "11px 14px", borderRadius: 10, marginBottom: 4,
+                    color: active ? "#0D9488" : "#4a5568",
+                    background: active ? "#E6FFFA" : "transparent",
+                    textDecoration: "none", fontSize: 14, fontWeight: 500,
+                  }}>
+                  <span style={{ fontSize: 20 }}>{item.icon}</span>
+                  <span>{lang === "en" ? item.labelEn : item.labelBn}</span>
+                </Link>
+              );
+            })}
+          </div>
+          <div style={{ padding: "14px 16px", borderTop: "0.5px solid #e2e8f0" }}>
+            <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+              <button onClick={() => handleLangChange("bn")}
+                style={{ flex: 1, padding: "8px", borderRadius: 8, border: "0.5px solid #e2e8f0", cursor: "pointer", fontSize: 12, fontWeight: 600, background: lang === "bn" ? "#0D9488" : "#fff", color: lang === "bn" ? "#fff" : "#4a5568" }}>
+                🇧🇩 বাংলা
+              </button>
+              <button onClick={() => handleLangChange("en")}
+                style={{ flex: 1, padding: "8px", borderRadius: 8, border: "0.5px solid #e2e8f0", cursor: "pointer", fontSize: 12, fontWeight: 600, background: lang === "en" ? "#0D9488" : "#fff", color: lang === "en" ? "#fff" : "#4a5568" }}>
+                🇬🇧 EN
+              </button>
+            </div>
+            <button onClick={async () => { await fetch("/api/logout", { method: "POST" }); window.location.href = "/login"; }}
+              style={{ width: "100%", color: "#E53E3E", background: "#fff5f5", border: "0.5px solid #FEB2B2", padding: "10px", borderRadius: 10, fontSize: 13, cursor: "pointer", fontWeight: 600 }}>
+              🚪 Logout
             </button>
           </div>
         </div>
 
-        {/* Logout */}
-        <div style={{ padding: "14px 16px", borderTop: "0.5px solid #e2e8f0" }}>
-          <button
-            onClick={async () => { await fetch("/api/logout", { method: "POST" }); window.location.href = "/login"; }}
-            style={{ width: "100%", color: "#E53E3E", background: "#fff5f5", border: "0.5px solid #FEB2B2", padding: "11px", borderRadius: 10, fontSize: 13, cursor: "pointer", fontWeight: 600 }}>
-            🚪 Logout
-          </button>
+        {/* Mobile Sidebar Overlay */}
+        {sidebarOpen && (
+          <div onClick={() => setSidebarOpen(false)}
+            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.35)", zIndex: 199, top: 56 }}
+            className="mobile-overlay" />
+        )}
+
+        {/* Mobile Sidebar */}
+        <div style={{
+          position: "fixed", top: 56, left: 0, bottom: 0, width: 260,
+          background: "#fff", borderRight: "0.5px solid #e2e8f0",
+          transform: sidebarOpen ? "translateX(0)" : "translateX(-100%)",
+          transition: "transform 0.25s ease",
+          zIndex: 200, overflowY: "auto",
+          display: "flex", flexDirection: "column",
+          boxShadow: sidebarOpen ? "4px 0 20px rgba(0,0,0,0.08)" : "none",
+        }} className="mobile-sidebar">
+          <div style={{ padding: "16px 10px", flex: 1 }}>
+            {menuItems.map((item, i) => {
+              const active = pathname === item.href || pathname.startsWith(item.href + "/");
+              return (
+                <Link key={i} href={item.href}
+                  onClick={() => setSidebarOpen(false)}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 12,
+                    padding: "12px 14px", borderRadius: 10, marginBottom: 4,
+                    color: active ? "#0D9488" : "#4a5568",
+                    background: active ? "#E6FFFA" : "transparent",
+                    textDecoration: "none", fontSize: 14, fontWeight: 500,
+                  }}>
+                  <span style={{ fontSize: 20 }}>{item.icon}</span>
+                  <span>{lang === "en" ? item.labelEn : item.labelBn}</span>
+                </Link>
+              );
+            })}
+          </div>
+          <div style={{ padding: "14px 16px", borderTop: "0.5px solid #e2e8f0" }}>
+            <button onClick={async () => { await fetch("/api/logout", { method: "POST" }); window.location.href = "/login"; }}
+              style={{ width: "100%", color: "#E53E3E", background: "#fff5f5", border: "0.5px solid #FEB2B2", padding: "10px", borderRadius: 10, fontSize: 13, cursor: "pointer", fontWeight: 600 }}>
+              🚪 Logout
+            </button>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div style={{ flex: 1, padding: "20px", minWidth: 0 }}>
+          <div style={{ maxWidth: 800, margin: "0 auto" }}>
+            {children}
+          </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div style={{ paddingBottom: 24, maxWidth: 600, margin: "0 auto" }}>
-        {children}
-      </div>
-
+      <style>{`
+        @media (max-width: 768px) {
+          .desktop-sidebar { display: none !important; }
+          .mobile-menu-btn { display: block !important; }
+        }
+        @media (min-width: 769px) {
+          .mobile-sidebar { display: none !important; }
+          .mobile-overlay { display: none !important; }
+          .mobile-menu-btn { display: none !important; }
+        }
+      `}</style>
     </div>
   );
 }

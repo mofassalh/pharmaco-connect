@@ -2,96 +2,106 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
-interface UserData {
-  name: string;
-  email: string;
-  phone?: string;
-  address?: string;
-  area?: string;
-  city?: string;
-}
-
 export default function ProfilePage() {
-  const [user, setUser] = useState<UserData | null>(null);
+  const [user, setUser] = useState<any>(null);
+  const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/me")
-      .then(res => res.json())
-      .then(data => {
-        if (data.id) setUser(data);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+    fetch("/api/me").then(r => r.json()).then(data => {
+      if (data.id) setUser(data);
+      setLoading(false);
+    });
+    fetch("/api/orders?my=1").then(r => r.json()).then(data => {
+      if (Array.isArray(data)) setOrders(data);
+    });
   }, []);
+
+  const totalSpent = orders.reduce((sum, o) => sum + Number(o.paidAmount || 0), 0);
+  const dueAmount = orders.reduce((sum, o) => sum + Number(o.dueAmount || 0), 0);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-400">Loading...</div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: 60, fontFamily: "sans-serif" }}>
+        <div style={{ color: "#a0aec0" }}>Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="bg-gray-50 pb-4">
-      <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
-        <div className="bg-white rounded-2xl border border-gray-100 p-6">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-20 h-20 rounded-full bg-teal-100 flex items-center justify-center text-3xl">👤</div>
-            <div className="flex-1">
-              <h2 className="text-xl font-bold text-gray-900">{user?.name || "নাম নেই"}</h2>
-              <p className="text-gray-500 text-sm">{user?.phone || user?.email}</p>
-              {user?.address && (
-                <p className="text-gray-400 text-sm mt-1">📍 {user.address}{user.area ? `, ${user.area}` : ""}{user.city ? `, ${user.city}` : ""}</p>
-              )}
-            </div>
+    <div style={{ fontFamily: "sans-serif", paddingBottom: 24 }}>
+
+      {/* Profile Card */}
+      <div style={{ background: "linear-gradient(135deg, #0D9488, #0f766e)", padding: "24px 16px 32px", position: "relative" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          {user?.photoUrl ? (
+            <img src={user.photoUrl} alt="Profile" style={{ width: 72, height: 72, borderRadius: "50%", objectFit: "cover", border: "3px solid rgba(255,255,255,0.4)" }} />
+          ) : (
+            <div style={{ width: 72, height: 72, borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, border: "3px solid rgba(255,255,255,0.4)" }}>👤</div>
+          )}
+          <div>
+            <div style={{ fontWeight: 700, fontSize: 18, color: "#fff" }}>{user?.name || "নাম নেই"}</div>
+            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.8)", marginTop: 2 }}>{user?.phone || user?.email}</div>
+            {user?.area && <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", marginTop: 2 }}>📍 {user.area}{user.city ? `, ${user.city}` : ""}</div>}
           </div>
-          <div className="grid grid-cols-3 gap-3 mb-5">
-            <div className="bg-teal-50 rounded-xl p-3 text-center">
-              <div className="text-xl font-bold text-teal-600">0</div>
-              <div className="text-xs text-gray-500 mt-1">মোট Orders</div>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, padding: "16px 16px 0" }}>
+        <div style={{ background: "#fff", borderRadius: 12, padding: 12, textAlign: "center", border: "0.5px solid #e8ecf0" }}>
+          <div style={{ fontSize: 20, fontWeight: 700, color: "#0D9488" }}>{orders.length}</div>
+          <div style={{ fontSize: 11, color: "#718096", marginTop: 2 }}>Orders</div>
+        </div>
+        <div style={{ background: "#fff", borderRadius: 12, padding: 12, textAlign: "center", border: "0.5px solid #e8ecf0" }}>
+          <div style={{ fontSize: 16, fontWeight: 700, color: "#2B6CB0" }}>৳{totalSpent.toFixed(0)}</div>
+          <div style={{ fontSize: 11, color: "#718096", marginTop: 2 }}>মোট খরচ</div>
+        </div>
+        <div style={{ background: dueAmount > 0 ? "#FFF5F5" : "#fff", borderRadius: 12, padding: 12, textAlign: "center", border: dueAmount > 0 ? "0.5px solid #FEB2B2" : "0.5px solid #e8ecf0" }}>
+          <div style={{ fontSize: 16, fontWeight: 700, color: dueAmount > 0 ? "#C53030" : "#276749" }}>৳{dueAmount.toFixed(0)}</div>
+          <div style={{ fontSize: 11, color: "#718096", marginTop: 2 }}>বাকি</div>
+        </div>
+      </div>
+
+      {/* Edit Button */}
+      <div style={{ padding: "12px 16px" }}>
+        <Link href="/customer/profile/edit" style={{ display: "block", width: "100%", background: "#0D9488", color: "#fff", padding: "12px", borderRadius: 12, fontWeight: 700, fontSize: 14, textDecoration: "none", textAlign: "center", boxSizing: "border-box" }}>
+          ✏️ Profile Edit করুন
+        </Link>
+      </div>
+
+      {/* Menu */}
+      <div style={{ margin: "0 16px", background: "#fff", borderRadius: 14, border: "0.5px solid #e8ecf0", overflow: "hidden" }}>
+        {[
+          { href: "/customer/prescription", icon: "📋", label: "আমার Prescriptions", sub: "সব prescription দেখুন" },
+          { href: "/customer/orders", icon: "📦", label: "আমার Orders", sub: "Order history" },
+          { href: "/customer/profile/family", icon: "👨‍👩‍👧‍👦", label: "পরিবারের সদস্য", sub: "সদস্য যোগ করুন" },
+          { href: "/customer/profile/billing", icon: "💳", label: "Billing ও বাকি টাকা", sub: "Payment history" },
+          { href: "/customer/profile/refills", icon: "🔔", label: "Monthly Refill", sub: "নিয়মিত Medicine" },
+          { href: "/customer/profile/settings", icon: "⚙️", label: "Settings", sub: "ভাষা, নোটিফিকেশন" },
+        ].map((item, i, arr) => (
+          <Link key={i} href={item.href} style={{
+            display: "flex", alignItems: "center", gap: 14,
+            padding: "14px 16px",
+            borderBottom: i < arr.length - 1 ? "0.5px solid #f7fafc" : "none",
+            textDecoration: "none",
+          }}>
+            <span style={{ fontSize: 22, width: 36, textAlign: "center" }}>{item.icon}</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 600, fontSize: 14, color: "#1a202c" }}>{item.label}</div>
+              <div style={{ fontSize: 12, color: "#a0aec0", marginTop: 1 }}>{item.sub}</div>
             </div>
-            <div className="bg-blue-50 rounded-xl p-3 text-center">
-              <div className="text-xl font-bold text-blue-600">৳0</div>
-              <div className="text-xs text-gray-500 mt-1">মোট খরচ</div>
-            </div>
-            <div className="bg-amber-50 rounded-xl p-3 text-center">
-              <div className="text-xl font-bold text-amber-600">0</div>
-              <div className="text-xs text-gray-500 mt-1">Loyalty Points</div>
-            </div>
-          </div>
-          <Link href="/customer/profile/edit" className="block w-full bg-teal-500 text-white py-3 rounded-xl font-medium text-center hover:bg-teal-600 transition">
-            ✏️ Profile Edit করুন
+            <span style={{ color: "#cbd5e0", fontSize: 16 }}>›</span>
           </Link>
-        </div>
+        ))}
+      </div>
 
-        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-          {[
-            { href: "/customer/prescription", icon: "📋", label: "আমার Prescriptions", sub: "সব prescription দেখুন" },
-            { href: "/customer/profile/family", icon: "👨‍👩‍👧‍👦", label: "পরিবারের সদস্য", sub: "সদস্য যোগ করুন" },
-            { href: "/customer/profile/billing", icon: "💳", label: "Billing ও বাকি টাকা", sub: "Payment history" },
-            { href: "/customer/profile/refills", icon: "🔔", label: "Monthly Refill", sub: "নিয়মিত Medicine" },
-            { href: "/customer/profile/settings", icon: "⚙️", label: "Settings", sub: "ভাষা, নোটিফিকেশন" },
-          ].map((item, i) => (
-            <Link key={i} href={item.href} className="flex items-center gap-4 px-5 py-4 border-b border-gray-50 hover:bg-gray-50 transition last:border-0">
-              <span className="text-2xl">{item.icon}</span>
-              <div className="flex-1">
-                <div className="font-medium text-gray-900">{item.label}</div>
-                <div className="text-xs text-gray-400">{item.sub}</div>
-              </div>
-              <span className="text-gray-300">→</span>
-            </Link>
-          ))}
-        </div>
-
+      {/* Logout */}
+      <div style={{ padding: "12px 16px" }}>
         <button
-          onClick={async () => {
-            await fetch("/api/logout", { method: "POST" });
-            window.location.href = "/login";
-          }}
-          className="w-full text-red-500 py-3 rounded-xl border border-red-100 font-medium hover:bg-red-50 transition">
-          Logout
+          onClick={async () => { await fetch("/api/logout", { method: "POST" }); window.location.href = "/login"; }}
+          style={{ width: "100%", color: "#E53E3E", background: "#fff5f5", border: "0.5px solid #FEB2B2", padding: "12px", borderRadius: 12, fontSize: 14, cursor: "pointer", fontWeight: 600 }}>
+          🚪 Logout
         </button>
       </div>
     </div>

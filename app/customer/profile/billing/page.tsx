@@ -1,70 +1,93 @@
 "use client";
-import Link from "next/link";
-const payments = [
-  { date: "২০ মার্চ ২০২৬", amount: 650, method: "bKash", name: "Mofassal" },
-  { date: "১৫ মার্চ ২০২৬", amount: 1200, method: "Cash", name: "Abdul Karim (বাবা)" },
-  { date: "৫ মার্চ ২০২৬", amount: 450, method: "Nagad", name: "Mofassal" },
-];
-const familyDue = [
-  { name: "আপনি (Mofassal)", due: 450 },
-  { name: "স্ত্রী (Rahela)", due: 0 },
-  { name: "বাবা (Abdul Karim)", due: 830 },
-  { name: "ছেলে (Rafi)", due: 0 },
-];
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+
 export default function BillingPage() {
-  return (
-    <div className="min-h-screen bg-gray-50 pb-10">
-      <div className="bg-white border-b px-6 py-4 flex items-center gap-3">
-        <Link href="/customer/profile" className="text-gray-400 hover:text-gray-600">←</Link>
-        <span className="font-bold text-gray-900">Billing ও বাকি টাকা</span>
+  const router = useRouter();
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/orders?my=1")
+      .then(r => r.json())
+      .then(data => {
+        setOrders(Array.isArray(data) ? data : []);
+        setLoading(false);
+      });
+  }, []);
+
+  const totalAmount = orders.reduce((sum, o) => sum + Number(o.totalAmount || 0), 0);
+  const totalPaid = orders.reduce((sum, o) => sum + Number(o.paidAmount || 0), 0);
+  const totalDue = orders.reduce((sum, o) => sum + Number(o.dueAmount || 0), 0);
+
+  if (loading) {
+    return (
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: 60, fontFamily: "sans-serif" }}>
+        <div style={{ color: "#a0aec0" }}>Loading...</div>
       </div>
-      <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
-        <div className="bg-white rounded-2xl border border-gray-100 p-6">
-          <div className="text-center mb-4">
-            <div className="text-sm text-gray-500 mb-1">মোট বাকি</div>
-            <div className="text-4xl font-bold text-red-500">৳ ১,২৮০</div>
-          </div>
-          <div className="grid grid-cols-2 gap-3 mb-5">
-            <div className="bg-gray-50 rounded-xl p-3 text-center">
-              <div className="text-lg font-bold text-gray-900">৳ ৫,৬৫০</div>
-              <div className="text-xs text-gray-400 mt-1">মোট কেনা</div>
+    );
+  }
+
+  return (
+    <div style={{ background: "#f7f8fa", minHeight: "100vh", fontFamily: "sans-serif", paddingBottom: 32 }}>
+
+      {/* Sub Header */}
+      <div style={{ background: "#fff", borderBottom: "0.5px solid #e2e8f0", padding: "0 16px", height: 48, display: "flex", alignItems: "center", gap: 12, position: "sticky", top: 56, zIndex: 10 }}>
+        <button onClick={() => router.back()} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 20, color: "#a0aec0" }}>←</button>
+        <span style={{ fontWeight: 700, color: "#1a202c", fontSize: 15 }}>💳 Billing ও বাকি টাকা</span>
+      </div>
+
+      <div style={{ maxWidth: 600, margin: "0 auto", padding: 16 }}>
+
+        {/* Summary */}
+        <div style={{ background: "#fff", borderRadius: 14, border: "0.5px solid #e2e8f0", padding: 20, marginBottom: 16 }}>
+          <div style={{ textAlign: "center", marginBottom: 16 }}>
+            <div style={{ fontSize: 13, color: "#718096", marginBottom: 4 }}>মোট বাকি</div>
+            <div style={{ fontSize: 36, fontWeight: 700, color: totalDue > 0 ? "#C53030" : "#276749" }}>
+              ৳{totalDue.toFixed(0)}
             </div>
-            <div className="bg-green-50 rounded-xl p-3 text-center">
-              <div className="text-lg font-bold text-green-600">৳ ৪,৩৭০</div>
-              <div className="text-xs text-gray-400 mt-1">মোট পরিশোধ</div>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
+            <div style={{ background: "#f7f8fa", borderRadius: 12, padding: 14, textAlign: "center" }}>
+              <div style={{ fontSize: 18, fontWeight: 700, color: "#1a202c" }}>৳{totalAmount.toFixed(0)}</div>
+              <div style={{ fontSize: 11, color: "#a0aec0", marginTop: 2 }}>মোট কেনা</div>
+            </div>
+            <div style={{ background: "#F0FFF4", borderRadius: 12, padding: 14, textAlign: "center" }}>
+              <div style={{ fontSize: 18, fontWeight: 700, color: "#276749" }}>৳{totalPaid.toFixed(0)}</div>
+              <div style={{ fontSize: 11, color: "#a0aec0", marginTop: 2 }}>মোট পরিশোধ</div>
             </div>
           </div>
-          <Link href="/customer/profile/payment" className="block w-full bg-green-500 text-white py-3 rounded-xl font-medium text-center hover:bg-green-600 transition">
-            💳 সব বাকি এখনই পরিশোধ করুন
-          </Link>
+          {totalDue > 0 && (
+            <div style={{ background: "#FFF5F5", border: "0.5px solid #FEB2B2", borderRadius: 10, padding: 14, textAlign: "center" }}>
+              <div style={{ fontSize: 13, color: "#C53030", fontWeight: 600 }}>⚠️ ৳{totalDue.toFixed(0)} বাকি আছে</div>
+              <div style={{ fontSize: 12, color: "#718096", marginTop: 4 }}>দয়া করে দ্রুত পরিশোধ করুন</div>
+            </div>
+          )}
         </div>
-        <div className="bg-white rounded-2xl border border-gray-100 p-5">
-          <h3 className="font-bold text-gray-900 mb-4">পরিবার অনুযায়ী বাকি</h3>
-          <div className="space-y-3">
-            {familyDue.map((f, i) => (
-              <div key={i} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
-                <span className="text-gray-700 text-sm">{f.name}</span>
-                <span className={f.due > 0 ? "font-bold text-red-500" : "text-green-500 text-sm"}>
-                  {f.due > 0 ? `৳ ${f.due}` : "✓ পরিশোধ"}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="bg-white rounded-2xl border border-gray-100 p-5">
-          <h3 className="font-bold text-gray-900 mb-4">সাম্প্রতিক Payment</h3>
-          <div className="space-y-3">
-            {payments.map((p, i) => (
-              <div key={i} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+
+        {/* Orders with due */}
+        <div style={{ background: "#fff", borderRadius: 14, border: "0.5px solid #e2e8f0", padding: 16, marginBottom: 16 }}>
+          <div style={{ fontWeight: 700, fontSize: 14, color: "#1a202c", marginBottom: 14 }}>Order Payment Status</div>
+          {orders.length === 0 ? (
+            <div style={{ textAlign: "center", padding: 24, color: "#a0aec0", fontSize: 13 }}>কোনো order নেই</div>
+          ) : (
+            orders.map((o, i) => (
+              <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0", borderBottom: i < orders.length - 1 ? "0.5px solid #f7fafc" : "none" }}>
                 <div>
-                  <div className="text-sm font-medium text-gray-900">{p.name}</div>
-                  <div className="text-xs text-gray-400">{p.date} · {p.method}</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: "#1a202c" }}>#{o.orderNumber?.slice(-6)}</div>
+                  <div style={{ fontSize: 11, color: "#a0aec0" }}>{new Date(o.createdAt).toLocaleDateString("bn-BD")}</div>
                 </div>
-                <span className="font-bold text-green-600">৳ {p.amount}</span>
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#1a202c" }}>৳{Number(o.totalAmount).toFixed(0)}</div>
+                  {Number(o.dueAmount) > 0 ? (
+                    <div style={{ fontSize: 11, color: "#C53030", fontWeight: 600 }}>বাকি: ৳{Number(o.dueAmount).toFixed(0)}</div>
+                  ) : (
+                    <div style={{ fontSize: 11, color: "#276749", fontWeight: 600 }}>✓ পরিশোধ</div>
+                  )}
+                </div>
               </div>
-            ))}
-          </div>
-          <button className="w-full text-teal-600 text-sm mt-3 hover:underline">সব Payment History দেখুন →</button>
+            ))
+          )}
         </div>
       </div>
     </div>

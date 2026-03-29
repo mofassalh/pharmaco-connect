@@ -100,7 +100,8 @@ export default function ShopPage() {
             <div style={{ color: "#a0aec0", fontSize: 14 }}>কোনো medicine পাওয়া যায়নি</div>
           </div>
         ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))"
+, gap: 12 }}>
             {filtered.map((item: any, i: number) => {
               const inCart = cart.find((c: any) => c.id === item.id);
               return (

@@ -8,12 +8,35 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [lang, setLang] = useState<"bn" | "en">("bn");
   const router = useRouter();
 
+  const t = {
+    bn: {
+      title: "Pharmaco Connect",
+      sub: "আপনার account এ login করুন",
+      email: "Email",
+      password: "Password",
+      login: "Login করুন",
+      logging: "Login হচ্ছে...",
+      newUser: "নতুন user?",
+      register: "Register করুন",
+    },
+    en: {
+      title: "Pharmaco Connect",
+      sub: "Login to your account",
+      email: "Email",
+      password: "Password",
+      login: "Login",
+      logging: "Logging in...",
+      newUser: "New user?",
+      register: "Register",
+    },
+  }[lang];
+
   const handleLogin = async () => {
-    console.log("Login clicked", email, password);
     if (!email || !password) {
-      setError("Email ও Password দিন");
+      setError(lang === "bn" ? "Email ও Password দিন" : "Enter email and password");
       return;
     }
     setLoading(true);
@@ -27,21 +50,19 @@ export default function LoginPage() {
       });
 
       const data = await res.json();
-      console.log("Login response:", data);
 
       if (!res.ok) {
-        setError(data.error || "কিছু একটা ভুল হয়েছে");
+        setError(data.error || (lang === "bn" ? "কিছু একটা ভুল হয়েছে" : "Something went wrong"));
         setLoading(false);
       } else {
         if (data.role === "ADMIN" || data.role === "SUPER_ADMIN" || data.role === "DELIVERY_STAFF") {
           router.push("/admin/dashboard");
         } else {
-          router.push("/customer/profile");
+          router.push("/customer/dashboard");
         }
       }
-    } catch (err) {
-      console.error("Login error:", err);
-      setError("Network error হয়েছে");
+    } catch {
+      setError(lang === "bn" ? "Network error হয়েছে" : "Network error");
       setLoading(false);
     }
   };
@@ -49,10 +70,26 @@ export default function LoginPage() {
   return (
     <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #f0fdfa, #fff)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, fontFamily: "sans-serif" }}>
       <div style={{ background: "#fff", borderRadius: 20, boxShadow: "0 2px 20px rgba(0,0,0,0.08)", padding: 32, width: "100%", maxWidth: 400 }}>
-        <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <div style={{ width: 52, height: 52, background: "#0D9488", borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px", fontSize: 24 }}>💊</div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: "#1a202c", margin: 0 }}>Pharmaco Connect</h1>
-          <p style={{ color: "#718096", fontSize: 14, marginTop: 6 }}>আপনার account এ login করুন</p>
+
+        {/* Language Toggle */}
+        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 20 }}>
+          <div style={{ display: "flex", background: "#f7fafc", borderRadius: 10, padding: 3, border: "0.5px solid #e2e8f0" }}>
+            <button onClick={() => setLang("bn")}
+              style={{ padding: "5px 12px", borderRadius: 8, border: "none", cursor: "pointer", fontSize: 12, fontWeight: 700, background: lang === "bn" ? "#0D9488" : "transparent", color: lang === "bn" ? "#fff" : "#718096" }}>
+              🇧🇩 বাং
+            </button>
+            <button onClick={() => setLang("en")}
+              style={{ padding: "5px 12px", borderRadius: 8, border: "none", cursor: "pointer", fontSize: 12, fontWeight: 700, background: lang === "en" ? "#0D9488" : "transparent", color: lang === "en" ? "#fff" : "#718096" }}>
+              🇬🇧 EN
+            </button>
+          </div>
+        </div>
+
+        {/* Logo */}
+        <div style={{ textAlign: "center", marginBottom: 28 }}>
+          <div style={{ width: 56, height: 56, background: "#0D9488", borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px", fontSize: 26 }}>💊</div>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: "#1a202c", margin: 0 }}>{t.title}</h1>
+          <p style={{ color: "#718096", fontSize: 14, marginTop: 6 }}>{t.sub}</p>
         </div>
 
         {error && (
@@ -62,7 +99,7 @@ export default function LoginPage() {
         )}
 
         <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 13, fontWeight: 500, color: "#4a5568", display: "block", marginBottom: 6 }}>Email</label>
+          <label style={{ fontSize: 13, fontWeight: 600, color: "#4a5568", display: "block", marginBottom: 6 }}>{t.email}</label>
           <input
             type="email"
             value={email}
@@ -73,7 +110,7 @@ export default function LoginPage() {
         </div>
 
         <div style={{ marginBottom: 24 }}>
-          <label style={{ fontSize: 13, fontWeight: 500, color: "#4a5568", display: "block", marginBottom: 6 }}>Password</label>
+          <label style={{ fontSize: 13, fontWeight: 600, color: "#4a5568", display: "block", marginBottom: 6 }}>{t.password}</label>
           <input
             type="password"
             value={password}
@@ -88,17 +125,16 @@ export default function LoginPage() {
           onClick={handleLogin}
           disabled={loading}
           style={{ width: "100%", background: loading ? "#a0aec0" : "#0D9488", color: "#fff", border: "none", padding: "14px", borderRadius: 12, fontSize: 15, fontWeight: 700, cursor: loading ? "not-allowed" : "pointer" }}>
-          {loading ? "Login হচ্ছে..." : "Login করুন"}
+          {loading ? t.logging : t.login}
         </button>
 
         <div style={{ textAlign: "center", marginTop: 20 }}>
           <p style={{ fontSize: 13, color: "#718096" }}>
-            নতুন user?{" "}
-            <Link href="/register" style={{ color: "#0D9488", fontWeight: 600 }}>
-              Register করুন
+            {t.newUser}{" "}
+            <Link href="/register" style={{ color: "#0D9488", fontWeight: 700 }}>
+              {t.register}
             </Link>
           </p>
-          <Link href="/admin/login" style={{ fontSize: 12, color: "#a0aec0", textDecoration: "none" }}>Admin Login →</Link>
         </div>
       </div>
     </div>

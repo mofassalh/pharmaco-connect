@@ -30,36 +30,46 @@ export async function POST(req: NextRequest) {
                   },
                 },
                 {
-                  text: `এই prescription থেকে medicine গুলো বের করুন। শুধু JSON format এ দিন, অন্য কিছু লিখবেন না, কোনো markdown বা backtick দেবেন না।
+                  text: `Extract medicines from this prescription. Return ONLY valid JSON, no markdown, no backticks, no explanation.
 
-Format:
-{
-  "medicines": [
-    {
-      "medicineName": "medicine নাম",
-      "dosage": "dose",
-      "frequency": "কতবার",
-      "duration": "কতদিন",
-      "quantity": 10
-    }
-  ],
-  "doctorName": "doctor নাম বা null",
-  "hospitalName": "hospital নাম বা null"
-}`,
+{"medicines":[{"medicineName":"name","dosage":"dose","frequency":"frequency","duration":"duration","quantity":10}],"doctorName":"name or null","hospitalName":"name or null"}`,
                 },
               ],
             },
           ],
+          generationConfig: {
+            temperature: 0.1,
+            maxOutputTokens: 1024,
+          },
         }),
       }
     );
 
     const data = await response.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-    const clean = text.replace(/```json|```/g, "").trim();
-    const parsed = JSON.parse(clean);
+    
+    // Debug: raw response দেখুন
+    const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    console.error("Gemini raw response:", rawText);
 
+    if (!rawText) {
+      return NextResponse.json({ 
+        error: "Gemini response খালি",
+        raw: JSON.stringify(data)
+      }, { status: 500 });
+    }
+
+    // JSON extract করুন
+    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      return NextResponse.json({ 
+        error: "JSON পাওয়া যায়নি",
+        raw: rawText
+      }, { status: 500 });
+    }
+
+    const parsed = JSON.parse(jsonMatch[0]);
     return NextResponse.json(parsed);
+
   } catch (error) {
     console.error("Scan error:", String(error));
     return NextResponse.json({

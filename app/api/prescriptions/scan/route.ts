@@ -1,9 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
-
-const client = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,30 +8,29 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Image URL দিন" }, { status: 400 });
     }
 
-    // Image fetch করুন
     const imageResponse = await fetch(imageUrl);
     const imageBuffer = await imageResponse.arrayBuffer();
     const base64Image = Buffer.from(imageBuffer).toString("base64");
     const contentType = imageResponse.headers.get("content-type") || "image/jpeg";
 
-    const message = await client.messages.create({
-      model: "claude-opus-4-6",
-      max_tokens: 1024,
-      messages: [
-        {
-          role: "user",
-          content: [
+    const apiKey = process.env.GEMINI_API_KEY;
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [
             {
-              type: "image",
-              source: {
-                type: "base64",
-                media_type: contentType as "image/jpeg" | "image/png" | "image/gif" | "image/webp",
-                data: base64Image,
-              },
-            },
-            {
-              type: "text",
-              text: `এই prescription থেকে medicine গুলো বের করুন। শুধু JSON format এ দিন, অন্য কিছু লিখবেন না।
+              parts: [
+                {
+                  inline_data: {
+                    mime_type: contentType,
+                    data: base64Image,
+                  },
+                },
+                {
+                  text: `এই prescription থেকে medicine গুলো বের করুন। শুধু JSON format এ দিন, অন্য কিছু লিখবেন না, কোনো markdown বা backtick দেবেন না।
 
 Format:
 {
@@ -52,24 +46,25 @@ Format:
   "doctorName": "doctor নাম বা null",
   "hospitalName": "hospital নাম বা null"
 }`,
+                },
+              ],
             },
           ],
-        },
-      ],
-    });
+        }),
+      }
+    );
 
-    const text = message.content[0].type === "text" ? message.content[0].text : "";
-    
-    // JSON parse করুন
+    const data = await response.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
     const clean = text.replace(/```json|```/g, "").trim();
     const parsed = JSON.parse(clean);
 
     return NextResponse.json(parsed);
   } catch (error) {
     console.error("Scan error:", String(error));
-    return NextResponse.json({ 
+    return NextResponse.json({
       error: "AI scan করতে পারেনি",
-      details: String(error)
+      details: String(error),
     }, { status: 500 });
   }
 }

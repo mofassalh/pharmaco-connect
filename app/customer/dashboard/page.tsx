@@ -25,38 +25,23 @@ export default function CustomerDashboard() {
   }, []);
 
   const activeOrders = orders.filter(o => o.status !== "DELIVERED" && o.status !== "CANCELLED").length;
-
   const today = new Date().toLocaleDateString("bn-BD", { year: "numeric", month: "long", day: "numeric" });
 
   const statusLabel: Record<string, string> = {
-    PENDING: "অপেক্ষায়",
-    CONFIRMED: "নিশ্চিত",
-    PROCESSING: "প্রস্তুত হচ্ছে",
-    OUT_FOR_DELIVERY: "রাস্তায় আছে",
-    DELIVERED: "পৌঁছে গেছে",
-    CANCELLED: "বাতিল",
+    PENDING: "অপেক্ষায়", CONFIRMED: "নিশ্চিত", PROCESSING: "প্রস্তুত হচ্ছে",
+    OUT_FOR_DELIVERY: "রাস্তায় আছে", DELIVERED: "পৌঁছে গেছে", CANCELLED: "বাতিল",
   };
-
   const statusBg: Record<string, string> = {
-    PENDING: "#f7fafc",
-    CONFIRMED: "#EBF8FF",
-    PROCESSING: "#FFFAF0",
-    OUT_FOR_DELIVERY: "#FAF5FF",
-    DELIVERED: "#F0FFF4",
-    CANCELLED: "#FFF5F5",
+    PENDING: "#f7fafc", CONFIRMED: "#EBF8FF", PROCESSING: "#FFFAF0",
+    OUT_FOR_DELIVERY: "#FAF5FF", DELIVERED: "#F0FFF4", CANCELLED: "#FFF5F5",
   };
-
   const statusColor: Record<string, string> = {
-    PENDING: "#718096",
-    CONFIRMED: "#2B6CB0",
-    PROCESSING: "#B7791F",
-    OUT_FOR_DELIVERY: "#6B46C1",
-    DELIVERED: "#276749",
-    CANCELLED: "#C53030",
+    PENDING: "#718096", CONFIRMED: "#2B6CB0", PROCESSING: "#B7791F",
+    OUT_FOR_DELIVERY: "#6B46C1", DELIVERED: "#276749", CANCELLED: "#C53030",
   };
 
   return (
-    <div style={{ fontFamily: "sans-serif", paddingBottom: 24 }}>
+    <div style={{ fontFamily: "sans-serif", paddingBottom: 32 }}>
 
       {/* Welcome Banner */}
       <div style={{ background: "#0D9488", borderRadius: 16, padding: "20px 24px", marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -70,22 +55,6 @@ export default function CustomerDashboard() {
           <div style={{ fontSize: 24, fontWeight: 700, color: "#fff", marginTop: 2 }}>{activeOrders}</div>
         </div>
       </div>
-
-      {/* Due Alert */}
-      {dueAmount > 0 && (
-        <div style={{ background: "#FFF5F5", border: "0.5px solid #FEB2B2", borderRadius: 12, padding: "12px 16px", marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{ fontSize: 20 }}>⚠️</span>
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#C53030" }}>বাকি টাকা আছে!</div>
-              <div style={{ fontSize: 12, color: "#718096" }}>৳{dueAmount.toFixed(0)} পরিশোধ বাকি</div>
-            </div>
-          </div>
-          <Link href="/customer/profile/billing" style={{ background: "#C53030", color: "#fff", padding: "8px 14px", borderRadius: 8, fontSize: 12, fontWeight: 700, textDecoration: "none" }}>
-            পরিশোধ করুন
-          </Link>
-        </div>
-      )}
 
       {/* Stats */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 16 }}>
@@ -127,7 +96,7 @@ export default function CustomerDashboard() {
       </div>
 
       {/* Bottom Grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
 
         {/* Recent Orders */}
         <div style={{ background: "#fff", border: "0.5px solid #e8ecf0", borderRadius: 14, padding: 16 }}>
@@ -183,6 +152,34 @@ export default function CustomerDashboard() {
           )}
         </div>
       </div>
+
+      {/* Due Alert — নিচে */}
+      {dueAmount > 0 && (
+        <div style={{ background: "#FFF5F5", border: "0.5px solid #FEB2B2", borderRadius: 12, padding: "14px 16px", marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontSize: 20 }}>⚠️</span>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#C53030" }}>বাকি টাকা আছে!</div>
+              <div style={{ fontSize: 12, color: "#718096" }}>৳{dueAmount.toFixed(0)} পরিশোধ বাকি</div>
+            </div>
+          </div>
+          <Link href="/customer/profile/billing" style={{ background: "#C53030", color: "#fff", padding: "8px 14px", borderRadius: 8, fontSize: 12, fontWeight: 700, textDecoration: "none" }}>
+            পরিশোধ করুন
+          </Link>
+        </div>
+      )}
+
+      {/* Footer */}
+      <div style={{ borderTop: "0.5px solid #e2e8f0", paddingTop: 16, textAlign: "center" }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: "#0D9488", marginBottom: 4 }}>💊 Pharmaco Connect</div>
+        <div style={{ fontSize: 11, color: "#a0aec0", marginBottom: 8 }}>আপনার বিশ্বস্ত ফার্মেসি সেবা</div>
+        <div style={{ display: "flex", justifyContent: "center", gap: 16, fontSize: 11, color: "#718096" }}>
+          <span>📞 01XXXXXXXXX</span>
+          <span>📧 support@pharmaco.com</span>
+        </div>
+        <div style={{ fontSize: 10, color: "#cbd5e0", marginTop: 8 }}>© 2026 Pharmaco Connect. All rights reserved.</div>
+      </div>
+
     </div>
   );
 }

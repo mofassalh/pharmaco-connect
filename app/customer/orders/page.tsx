@@ -32,15 +32,44 @@ const statusBg: Record<string, string> = {
 export default function OrdersPage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [cancelling, setCancelling] = useState<string | null>(null);
+  const [confirmCancel, setConfirmCancel] = useState<string | null>(null);
 
   useEffect(() => {
+    loadOrders();
+  }, []);
+
+  const loadOrders = () => {
     fetch("/api/orders?my=1")
       .then(r => r.json())
       .then(data => {
         setOrders(Array.isArray(data) ? data : []);
         setLoading(false);
       });
-  }, []);
+  };
+
+  const handleCancel = async (orderId: string) => {
+    setCancelling(orderId);
+    const res = await fetch(`/api/orders/${orderId}/status`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        status: "CANCELLED",
+        changedBy: "customer",
+        note: "Customer কর্তৃক বাতিল",
+      }),
+    });
+
+    if (res.ok) {
+      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: "CANCELLED" } : o));
+    } else {
+      alert("বাতিল করা যায়নি");
+    }
+    setCancelling(null);
+    setConfirmCancel(null);
+  };
+
+  const canCancel = (status: string) => status === "PENDING" || status === "CONFIRMED";
 
   if (loading) {
     return (
@@ -51,7 +80,7 @@ export default function OrdersPage() {
   }
 
   return (
-    <div style={{ padding: 16, fontFamily: "sans-serif" }}>
+    <div style={{ fontFamily: "sans-serif" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
         <h1 style={{ fontSize: 18, fontWeight: 700, color: "#1a202c", margin: 0 }}>📦 আমার Orders</h1>
         <Link href="/customer/shop" style={{ background: "#0D9488", color: "#fff", padding: "7px 14px", borderRadius: 9, fontSize: 12, fontWeight: 600, textDecoration: "none" }}>
@@ -109,13 +138,36 @@ export default function OrdersPage() {
                 <div>
                   <div style={{ fontSize: 12, color: "#718096" }}>মোট</div>
                   <div style={{ fontSize: 16, fontWeight: 700, color: "#1a202c" }}>৳{Number(order.totalAmount).toFixed(0)}</div>
+                  {Number(order.dueAmount) > 0 && (
+                    <div style={{ fontSize: 11, color: "#C53030", fontWeight: 600 }}>বাকি: ৳{Number(order.dueAmount).toFixed(0)}</div>
+                  )}
                 </div>
-                {Number(order.dueAmount) > 0 && (
-                  <div style={{ textAlign: "right" }}>
-                    <div style={{ fontSize: 12, color: "#C53030", fontWeight: 600 }}>বাকি: ৳{Number(order.dueAmount).toFixed(0)}</div>
-                    <Link href="/customer/profile/billing" style={{ fontSize: 11, background: "#C53030", color: "#fff", padding: "4px 12px", borderRadius: 8, textDecoration: "none", marginTop: 4, display: "inline-block" }}>
-                      পরিশোধ করুন
-                    </Link>
+
+                {/* Cancel Button */}
+                {canCancel(order.status) && (
+                  <div>
+                    {confirmCancel === order.id ? (
+                      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                        <span style={{ fontSize: 12, color: "#718096" }}>নিশ্চিত?</span>
+                        <button
+                          onClick={() => handleCancel(order.id)}
+                          disabled={cancelling === order.id}
+                          style={{ background: "#C53030", color: "#fff", border: "none", padding: "6px 12px", borderRadius: 8, fontSize: 12, cursor: "pointer", fontWeight: 600 }}>
+                          {cancelling === order.id ? "বাতিল হচ্ছে..." : "হ্যাঁ"}
+                        </button>
+                        <button
+                          onClick={() => setConfirmCancel(null)}
+                          style={{ background: "#fff", color: "#718096", border: "0.5px solid #e2e8f0", padding: "6px 12px", borderRadius: 8, fontSize: 12, cursor: "pointer" }}>
+                          না
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setConfirmCancel(order.id)}
+                        style={{ background: "#FFF5F5", color: "#C53030", border: "0.5px solid #FEB2B2", padding: "8px 14px", borderRadius: 8, fontSize: 12, cursor: "pointer", fontWeight: 600 }}>
+                        ✕ বাতিল করুন
+                      </button>
+                    )}
                   </div>
                 )}
               </div>

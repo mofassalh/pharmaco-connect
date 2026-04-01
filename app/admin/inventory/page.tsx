@@ -11,6 +11,7 @@ interface Item {
   unit: string;
   currentStock: number;
   reorderPoint: number;
+  unitPrice: number;
   sellingPrice: number;
   isAvailable: boolean;
   needsReorder: boolean;
@@ -26,107 +27,113 @@ export default function InventoryPage() {
   useEffect(() => {
     fetch("/api/inventory")
       .then(r => r.json())
-      .then(data => { setItems(data); setLoading(false); });
+      .then(data => { setItems(Array.isArray(data) ? data : []); setLoading(false); });
   }, []);
 
   const filtered = items.filter(item => {
-    const matchSearch = item.name.toLowerCase().includes(search.toLowerCase());
+    const matchSearch = item.name.toLowerCase().includes(search.toLowerCase()) ||
+      (item.genericName || "").toLowerCase().includes(search.toLowerCase());
     if (tab === "available") return matchSearch && item.isAvailable && !item.needsReorder;
     if (tab === "reorder") return matchSearch && item.needsReorder;
     if (tab === "out") return matchSearch && !item.isAvailable;
     return matchSearch;
   });
 
+  const totalValue = items.reduce((sum, i) => sum + (Number(i.sellingPrice) * i.currentStock), 0);
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Link href="/admin/dashboard" className="text-gray-400 hover:text-gray-600">←</Link>
-          <span className="font-bold text-gray-900">Inventory</span>
-        </div>
-        <Link href="/admin/inventory/add" className="bg-teal-500 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-teal-600 transition">
+    <div style={{ fontFamily: "sans-serif" }}>
+
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+        <h1 style={{ fontSize: 18, fontWeight: 700, color: "#1a202c", margin: 0 }}>💊 Inventory</h1>
+        <Link href="/admin/inventory/add"
+          style={{ background: "#0D9488", color: "#fff", padding: "8px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600, textDecoration: "none" }}>
           + Medicine যোগ করুন
         </Link>
       </div>
 
-      <div className="max-w-5xl mx-auto px-6 py-6">
-        <input
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Medicine search করুন..."
-          className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-teal-400"
-        />
+      {/* Summary */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 16 }}>
+        {[
+          { val: items.length, label: "মোট Medicine", color: "#1a202c", bg: "#f7f8fa" },
+          { val: items.filter(i => i.isAvailable && !i.needsReorder).length, label: "Available", color: "#276749", bg: "#F0FFF4" },
+          { val: items.filter(i => i.needsReorder).length, label: "Reorder দরকার", color: "#B7791F", bg: "#FFFAF0" },
+          { val: `৳${totalValue.toFixed(0)}`, label: "মোট মূল্য", color: "#2B6CB0", bg: "#EBF8FF" },
+        ].map((s, i) => (
+          <div key={i} style={{ background: s.bg, borderRadius: 12, padding: 14, border: "0.5px solid #e8ecf0" }}>
+            <div style={{ fontSize: 18, fontWeight: 700, color: s.color, marginBottom: 4 }}>{s.val}</div>
+            <div style={{ fontSize: 11, color: "#718096" }}>{s.label}</div>
+          </div>
+        ))}
+      </div>
 
-        <div className="flex gap-2 mb-6">
-          {[
-            { key: "all", label: "সব", count: items.length },
-            { key: "available", label: "Available", count: items.filter(i => i.isAvailable && !i.needsReorder).length },
-            { key: "reorder", label: "Reorder দরকার", count: items.filter(i => i.needsReorder).length },
-            { key: "out", label: "Stock নেই", count: items.filter(i => !i.isAvailable).length },
-          ].map(t => (
-            <button key={t.key} onClick={() => setTab(t.key)}
-              className={`px-4 py-2 rounded-xl text-sm font-medium transition ${tab === t.key ? "bg-teal-500 text-white" : "bg-white border border-gray-200 text-gray-600 hover:border-teal-300"}`}>
-              {t.label} ({t.count})
-            </button>
+      {/* Search */}
+      <input value={search} onChange={e => setSearch(e.target.value)}
+        placeholder="Medicine search করুন..."
+        style={{ width: "100%", border: "0.5px solid #e2e8f0", borderRadius: 10, padding: "10px 14px", fontSize: 13, marginBottom: 12, boxSizing: "border-box", background: "#fff" }} />
+
+      {/* Tabs */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+        {[
+          { key: "all", label: "সব", count: items.length },
+          { key: "available", label: "Available", count: items.filter(i => i.isAvailable && !i.needsReorder).length },
+          { key: "reorder", label: "Reorder দরকার", count: items.filter(i => i.needsReorder).length },
+          { key: "out", label: "Stock নেই", count: items.filter(i => !i.isAvailable).length },
+        ].map(t => (
+          <button key={t.key} onClick={() => setTab(t.key)}
+            style={{ padding: "7px 14px", borderRadius: 20, fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer", background: tab === t.key ? "#0D9488" : "#fff", color: tab === t.key ? "#fff" : "#4a5568", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
+            {t.label} ({t.count})
+          </button>
+        ))}
+      </div>
+
+      {loading ? (
+        <div style={{ textAlign: "center", padding: 40, color: "#a0aec0" }}>Loading...</div>
+      ) : filtered.length === 0 ? (
+        <div style={{ textAlign: "center", padding: 60 }}>
+          <div style={{ fontSize: 48, marginBottom: 12 }}>📦</div>
+          <div style={{ color: "#a0aec0", marginBottom: 16 }}>কোনো medicine নেই</div>
+          <Link href="/admin/inventory/add"
+            style={{ background: "#0D9488", color: "#fff", padding: "10px 24px", borderRadius: 10, fontSize: 14, fontWeight: 600, textDecoration: "none" }}>
+            + প্রথম Medicine যোগ করুন
+          </Link>
+        </div>
+      ) : (
+        <div style={{ background: "#fff", border: "0.5px solid #e8ecf0", borderRadius: 14, overflow: "hidden" }}>
+          {/* Table Header */}
+          <div style={{ display: "grid", gridTemplateColumns: "2.5fr 1fr 1fr 1fr 1fr 80px", padding: "10px 16px", background: "#f7f8fa", borderBottom: "0.5px solid #e2e8f0" }}>
+            {["Medicine", "Category", "Stock", "Selling Price", "Status", ""].map((h, i) => (
+              <div key={i} style={{ fontSize: 11, fontWeight: 700, color: "#718096" }}>{h}</div>
+            ))}
+          </div>
+
+          {filtered.map((item, i) => (
+            <div key={i} style={{ display: "grid", gridTemplateColumns: "2.5fr 1fr 1fr 1fr 1fr 80px", padding: "12px 16px", borderBottom: i < filtered.length - 1 ? "0.5px solid #f7fafc" : "none", alignItems: "center" }}>
+              <div>
+                <div style={{ fontWeight: 600, fontSize: 13, color: "#1a202c" }}>{item.name}</div>
+                {item.genericName && <div style={{ fontSize: 11, color: "#a0aec0" }}>{item.genericName}</div>}
+                {item.brand && <div style={{ fontSize: 11, color: "#a0aec0" }}>{item.brand}</div>}
+              </div>
+              <div style={{ fontSize: 12, color: "#718096" }}>{item.category}</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: item.currentStock <= item.reorderPoint ? "#C53030" : "#1a202c" }}>
+                {item.currentStock} <span style={{ fontSize: 10, color: "#a0aec0" }}>{item.unit}</span>
+              </div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: "#0D9488" }}>৳{Number(item.sellingPrice).toFixed(0)}</div>
+              <div>
+                <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 20, fontWeight: 600,
+                  background: !item.isAvailable ? "#FFF5F5" : item.needsReorder ? "#FFFAF0" : "#F0FFF4",
+                  color: !item.isAvailable ? "#C53030" : item.needsReorder ? "#B7791F" : "#276749" }}>
+                  {!item.isAvailable ? "Stock নেই" : item.needsReorder ? "Reorder" : "✓ Available"}
+                </span>
+              </div>
+              <Link href={`/admin/inventory/${item.id}`}
+                style={{ fontSize: 12, background: "#EBF8FF", color: "#2B6CB0", padding: "5px 10px", borderRadius: 6, textDecoration: "none", fontWeight: 600, display: "inline-block" }}>
+                Edit
+              </Link>
+            </div>
           ))}
         </div>
-
-        {loading ? (
-          <div className="text-center py-12 text-gray-400">Loading...</div>
-        ) : filtered.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="text-4xl mb-3">📦</div>
-            <div className="text-gray-500">কোনো medicine নেই</div>
-            <Link href="/admin/inventory/add" className="mt-4 inline-block bg-teal-500 text-white px-6 py-2 rounded-xl text-sm font-medium hover:bg-teal-600 transition">
-              + প্রথম Medicine যোগ করুন
-            </Link>
-          </div>
-        ) : (
-          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-            <table className="w-full">
-              <thead>
-                <tr className="text-xs text-gray-400 border-b bg-gray-50">
-                  <th className="text-left px-4 py-3">Medicine</th>
-                  <th className="text-left px-4 py-3">Category</th>
-                  <th className="text-left px-4 py-3">Stock</th>
-                  <th className="text-left px-4 py-3">Price</th>
-                  <th className="text-left px-4 py-3">Status</th>
-                  <th className="text-left px-4 py-3">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((item, i) => (
-                  <tr key={i} className="border-b border-gray-50 last:border-0 hover:bg-gray-50">
-                    <td className="px-4 py-3">
-                      <div className="font-medium text-gray-900 text-sm">{item.name}</div>
-                      <div className="text-xs text-gray-400">{item.genericName}</div>
-                    </td>
-                    <td className="px-4 py-3 text-xs text-gray-500">{item.category}</td>
-                    <td className="px-4 py-3">
-                      <span className={`text-sm font-bold ${item.currentStock <= item.reorderPoint ? "text-red-500" : "text-gray-900"}`}>
-                        {item.currentStock} {item.unit}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-sm font-medium text-gray-900">৳{Number(item.sellingPrice).toFixed(0)}</td>
-                    <td className="px-4 py-3">
-                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                        !item.isAvailable ? "bg-red-50 text-red-600" :
-                        item.needsReorder ? "bg-amber-50 text-amber-600" :
-                        "bg-green-50 text-green-600"
-                      }`}>
-                        {!item.isAvailable ? "Stock নেই" : item.needsReorder ? "Reorder দরকার" : "Available"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <Link href={`/admin/inventory/${item.id}`} className="text-xs text-teal-600 hover:underline">Edit</Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+      )}
     </div>
   );
 }

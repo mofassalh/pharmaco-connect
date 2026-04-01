@@ -1,94 +1,148 @@
 "use client";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
-export default function AdminLoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const router = useRouter();
+const menuItems = [
+  { href: "/admin/dashboard", icon: "📊", label: "Dashboard" },
+  { href: "/admin/orders", icon: "📦", label: "Orders" },
+  { href: "/admin/customers", icon: "👥", label: "Customers" },
+  { href: "/admin/inventory", icon: "💊", label: "Inventory" },
+  { href: "/admin/prescriptions", icon: "📋", label: "Prescriptions" },
+  { href: "/admin/payments", icon: "💳", label: "Payments" },
+  { href: "/admin/reminders", icon: "🔔", label: "Reminders" },
+];
 
-  const handleLogin = async () => {
-    if (!email || !password) {
-      setError("Email ও Password দিন");
-      return;
-    }
-    setLoading(true);
-    setError("");
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const pathname = usePathname();
 
-    const res = await fetch("/api/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      setError(data.error || "Email বা Password ভুল");
-      setLoading(false);
-    } else if (data.role !== "ADMIN" && data.role !== "SUPER_ADMIN" && data.role !== "DELIVERY_STAFF") {
-      setError("আপনার Admin access নেই");
-      setLoading(false);
-    } else {
-      router.push("/admin/dashboard");
-    }
-  };
+  if (pathname === "/admin/login") {
+    return <>{children}</>;
+  }
 
   return (
-    <div style={{ minHeight: "100vh", background: "#1a202c", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, fontFamily: "sans-serif" }}>
-      <div style={{ background: "#2d3748", borderRadius: 20, padding: 32, width: "100%", maxWidth: 400, border: "0.5px solid #4a5568" }}>
+    <div style={{ minHeight: "100vh", background: "#f7f8fa", fontFamily: "sans-serif" }}>
 
-        {/* Logo */}
-        <div style={{ textAlign: "center", marginBottom: 28 }}>
-          <div style={{ width: 56, height: 56, background: "#0D9488", borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px", fontSize: 26 }}>💊</div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: "#fff", margin: 0 }}>Pharmaco Admin</h1>
-          <p style={{ color: "#a0aec0", fontSize: 14, marginTop: 6 }}>Admin Panel Login</p>
-          <span style={{ fontSize: 11, background: "#553C9A", color: "#D6BCFA", padding: "3px 12px", borderRadius: 20, fontWeight: 600, display: "inline-block", marginTop: 8 }}>Admin Only</span>
+      {/* Top Nav */}
+      <div style={{
+        background: "#1a202c", padding: "0 20px", height: 56,
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        position: "sticky", top: 0, zIndex: 100,
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <button onClick={() => setSidebarOpen(!sidebarOpen)}
+            style={{ background: "none", border: "none", cursor: "pointer", fontSize: 22, color: "#fff" }}
+            className="mobile-menu-btn">
+            ☰
+          </button>
+          <Link href="/admin/dashboard" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none" }}>
+            <div style={{ width: 32, height: 32, background: "#0D9488", borderRadius: 9, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>💊</div>
+            <span style={{ fontWeight: 700, color: "#fff", fontSize: 15 }}>Pharmaco Admin</span>
+          </Link>
         </div>
-
-        {error && (
-          <div style={{ background: "#742A2A", border: "1px solid #C53030", color: "#FEB2B2", fontSize: 13, padding: "10px 14px", borderRadius: 10, marginBottom: 16 }}>
-            {error}
-          </div>
-        )}
-
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 13, fontWeight: 600, color: "#a0aec0", display: "block", marginBottom: 6 }}>Email</label>
-          <input
-            type="email"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            placeholder="admin@pharmaco.com"
-            style={{ width: "100%", background: "#1a202c", border: "1px solid #4a5568", borderRadius: 12, padding: "12px 16px", fontSize: 14, boxSizing: "border-box", outline: "none", color: "#fff" }}
-          />
-        </div>
-
-        <div style={{ marginBottom: 24 }}>
-          <label style={{ fontSize: 13, fontWeight: 600, color: "#a0aec0", display: "block", marginBottom: 6 }}>Password</label>
-          <input
-            type="password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            placeholder="••••••••"
-            onKeyDown={e => e.key === "Enter" && handleLogin()}
-            style={{ width: "100%", background: "#1a202c", border: "1px solid #4a5568", borderRadius: 12, padding: "12px 16px", fontSize: 14, boxSizing: "border-box", outline: "none", color: "#fff" }}
-          />
-        </div>
-
-        <button
-          onClick={handleLogin}
-          disabled={loading}
-          style={{ width: "100%", background: loading ? "#4a5568" : "#0D9488", color: "#fff", border: "none", padding: "14px", borderRadius: 12, fontSize: 15, fontWeight: 700, cursor: loading ? "not-allowed" : "pointer" }}>
-          {loading ? "Login হচ্ছে..." : "Admin Login করুন"}
-        </button>
-
-        <div style={{ textAlign: "center", marginTop: 20 }}>
-          <Link href="/login" style={{ fontSize: 12, color: "#718096", textDecoration: "none" }}>← Customer Login এ যান</Link>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <Link href="/customer/dashboard" style={{ fontSize: 12, color: "#9FE1CB", textDecoration: "none" }}>
+            Customer Portal →
+          </Link>
+          <button
+            onClick={async () => { await fetch("/api/logout", { method: "POST" }); window.location.href = "/admin/login"; }}
+            style={{ background: "#C53030", color: "#fff", border: "none", padding: "6px 14px", borderRadius: 8, fontSize: 12, cursor: "pointer", fontWeight: 600 }}>
+            Logout
+          </button>
         </div>
       </div>
+
+      <div style={{ display: "flex", minHeight: "calc(100vh - 56px)" }}>
+
+        {/* Desktop Sidebar */}
+        <div style={{
+          width: 220, background: "#1a202c",
+          display: "flex", flexDirection: "column",
+          position: "sticky", top: 56, height: "calc(100vh - 56px)",
+          overflowY: "auto", flexShrink: 0,
+        }} className="desktop-sidebar">
+          <div style={{ padding: "16px 10px", flex: 1 }}>
+            {menuItems.map((item, i) => {
+              const active = pathname === item.href || pathname.startsWith(item.href + "/");
+              return (
+                <Link key={i} href={item.href}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 12,
+                    padding: "11px 14px", borderRadius: 10, marginBottom: 4,
+                    color: active ? "#0D9488" : "#a0aec0",
+                    background: active ? "rgba(13,148,136,0.1)" : "transparent",
+                    textDecoration: "none", fontSize: 14, fontWeight: 500,
+                    borderLeft: active ? "3px solid #0D9488" : "3px solid transparent",
+                  }}>
+                  <span style={{ fontSize: 18 }}>{item.icon}</span>
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Mobile Sidebar Overlay */}
+        {sidebarOpen && (
+          <div onClick={() => setSidebarOpen(false)}
+            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 199, top: 56 }}
+            className="mobile-overlay" />
+        )}
+
+        {/* Mobile Sidebar */}
+        <div style={{
+          position: "fixed", top: 56, left: 0, bottom: 0, width: 260,
+          background: "#1a202c",
+          transform: sidebarOpen ? "translateX(0)" : "translateX(-100%)",
+          transition: "transform 0.25s ease",
+          zIndex: 200, overflowY: "auto",
+          display: "flex", flexDirection: "column",
+        }} className="mobile-sidebar">
+          <div style={{ padding: "16px 10px", flex: 1 }}>
+            {menuItems.map((item, i) => {
+              const active = pathname === item.href || pathname.startsWith(item.href + "/");
+              return (
+                <Link key={i} href={item.href}
+                  onClick={() => setSidebarOpen(false)}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 12,
+                    padding: "12px 14px", borderRadius: 10, marginBottom: 4,
+                    color: active ? "#0D9488" : "#a0aec0",
+                    background: active ? "rgba(13,148,136,0.1)" : "transparent",
+                    textDecoration: "none", fontSize: 14, fontWeight: 500,
+                    borderLeft: active ? "3px solid #0D9488" : "3px solid transparent",
+                  }}>
+                  <span style={{ fontSize: 18 }}>{item.icon}</span>
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div style={{ flex: 1, padding: "20px", minWidth: 0 }}>
+          <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+            {children}
+            <div style={{ borderTop: "0.5px solid #e2e8f0", marginTop: 32, paddingTop: 16, textAlign: "center" }}>
+              <div style={{ fontSize: 11, color: "#a0aec0" }}>© 2026 Pharmaco Connect Admin Panel</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <style>{`
+        @media (max-width: 768px) {
+          .desktop-sidebar { display: none !important; }
+          .mobile-menu-btn { display: block !important; }
+        }
+        @media (min-width: 769px) {
+          .mobile-sidebar { display: none !important; }
+          .mobile-overlay { display: none !important; }
+          .mobile-menu-btn { display: none !important; }
+        }
+      `}</style>
     </div>
   );
 }

@@ -39,10 +39,10 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
             className="mobile-menu-btn">
             ☰
           </button>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ width: 32, height: 32, background: "#0D9488", borderRadius: 9, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>💊</div>
-            <span style={{ fontWeight: 700, color: "#1a202c", fontSize: 15 }}>Pharmaco Connect</span>
-          </div>
+          <Link href="/customer/dashboard" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none" }}>
+  <div style={{ width: 32, height: 32, background: "#0D9488", borderRadius: 9, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>💊</div>
+  <span style={{ fontWeight: 700, color: "#1a202c", fontSize: 15 }}>Pharmaco Connect</span>
+</Link>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ display: "flex", background: "#f7fafc", borderRadius: 8, padding: 3, border: "0.5px solid #e2e8f0" }}>

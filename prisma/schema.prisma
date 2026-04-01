@@ -42,6 +42,7 @@ model Customer {
   area           String?
   city           String?
   emergencyPhone String?
+  photoUrl       String?
   notes          String?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
@@ -281,23 +282,23 @@ model RegularMedicine {
 }
 
 model Reminder {
-  id                String          @id @default(cuid())
+  id                String           @id @default(cuid())
   customerId        String
-  customer          Customer        @relation(fields: [customerId], references: [id])
+  customer          Customer         @relation(fields: [customerId], references: [id])
   regularMedicineId String?
   regularMedicine   RegularMedicine? @relation(fields: [regularMedicineId], references: [id])
-  type              ReminderType    @default(MONTHLY_REFILL)
-  status            ReminderStatus  @default(PENDING)
+  type              ReminderType     @default(MONTHLY_REFILL)
+  status            ReminderStatus   @default(PENDING)
   dueDate           DateTime
   reminderSentAt    DateTime?
-  callAttempts      Int             @default(0)
+  callAttempts      Int              @default(0)
   lastCallAt        DateTime?
   callNotes         String?
   customerConfirmed Boolean?
   confirmedAt       DateTime?
   customerNote      String?
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
 
   @@map("reminders")
 }

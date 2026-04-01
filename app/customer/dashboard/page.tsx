@@ -168,9 +168,6 @@ export default function CustomerDashboard() {
           </Link>
         </div>
       )}
-
-      
-
     </div>
   );
 }

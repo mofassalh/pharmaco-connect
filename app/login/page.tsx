@@ -45,16 +45,13 @@ export default function LoginPage() {
     }
     setLoading(true);
     setError("");
-
     try {
       const res = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-
       const data = await res.json();
-
       if (!res.ok) {
         setError(data.error || (lang === "bn" ? "কিছু একটা ভুল হয়েছে" : "Something went wrong"));
         setLoading(false);
@@ -71,11 +68,28 @@ export default function LoginPage() {
     }
   };
 
+  const googleBtnStyle: React.CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    width: "100%",
+    padding: "13px",
+    border: "1px solid #e2e8f0",
+    borderRadius: 12,
+    background: "#fff",
+    color: "#374151",
+    fontSize: 15,
+    fontWeight: 600,
+    textDecoration: "none",
+    cursor: "pointer",
+    boxSizing: "border-box",
+  };
+
   return (
     <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #f0fdfa, #fff)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, fontFamily: "sans-serif" }}>
       <div style={{ background: "#fff", borderRadius: 20, boxShadow: "0 2px 20px rgba(0,0,0,0.08)", padding: 32, width: "100%", maxWidth: 400 }}>
 
-        {/* Language Toggle */}
         <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 20 }}>
           <div style={{ display: "flex", background: "#f7fafc", borderRadius: 10, padding: 3, border: "0.5px solid #e2e8f0" }}>
             <button onClick={() => setLang("bn")}
@@ -89,7 +103,6 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Logo */}
         <div style={{ textAlign: "center", marginBottom: 28 }}>
           <div style={{ width: 56, height: 56, background: "#0D9488", borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px", fontSize: 26 }}>💊</div>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: "#1a202c", margin: 0 }}>{t.title}</h1>
@@ -132,36 +145,13 @@ export default function LoginPage() {
           {loading ? t.logging : t.login}
         </button>
 
-        {/* Divider */}
         <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "20px 0" }}>
           <div style={{ flex: 1, height: 1, background: "#e2e8f0" }} />
           <span style={{ color: "#a0aec0", fontSize: 13 }}>{t.or}</span>
           <div style={{ flex: 1, height: 1, background: "#e2e8f0" }} />
         </div>
 
-        {/* Google Login Button */}
-        
-    href="/api/auth/google"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 10,
-            width: "100%",
-            padding: "13px",
-            border: "1px solid #e2e8f0",
-            borderRadius: 12,
-            background: "#fff",
-            color: "#374151",
-            fontSize: 15,
-            fontWeight: 600,
-            textDecoration: "none",
-            cursor: "pointer",
-            boxSizing: "border-box" as const,
-          }}
-          onMouseOver={(e) => { e.currentTarget.style.background = "#f9fafb"; }}
-          onMouseOut={(e) => { e.currentTarget.style.background = "#fff"; }}
-        >
+        <a href="/api/auth/google" style={googleBtnStyle}>
           <svg width="20" height="20" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
             <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>

@@ -114,6 +114,11 @@ model PrescriptionMedicine {
   instructions    String?
   inventoryItemId String?
   inventoryItem   InventoryItem? @relation(fields: [inventoryItemId], references: [id])
+  morning         String?
+  noon            String?
+  evening         String?
+  night           String?
+  condition       String? 
   isAiExtracted   Boolean       @default(false)
   customerEdited  Boolean       @default(false)
 

@@ -14,6 +14,8 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    const redirectUri = `${process.env.NEXTAUTH_URL}/api/auth/google/callback`;
+    
     const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -21,16 +23,20 @@ export async function GET(request: NextRequest) {
         code,
         client_id: process.env.GOOGLE_CLIENT_ID!,
         client_secret: process.env.GOOGLE_CLIENT_SECRET!,
-        redirect_uri: `${process.env.NEXTAUTH_URL}/api/auth/google/callback`,
+        redirect_uri: redirectUri,
         grant_type: "authorization_code",
       }),
     });
 
     const tokenData = await tokenRes.json();
+    
+    console.log("TOKEN RESPONSE:", JSON.stringify(tokenData));
+    console.log("REDIRECT URI USED:", redirectUri);
+    console.log("CLIENT ID:", process.env.GOOGLE_CLIENT_ID);
 
     if (!tokenData.access_token) {
       return NextResponse.redirect(
-        `${process.env.NEXTAUTH_URL}/login?error=token_failed`
+        `${process.env.NEXTAUTH_URL}/login?error=token_failed&reason=${encodeURIComponent(tokenData.error || "unknown")}`
       );
     }
 
@@ -90,7 +96,7 @@ export async function GET(request: NextRequest) {
       .sign(secret);
 
     const response = NextResponse.redirect(
-      `${process.env.NEXTAUTH_URL}/dashboard`
+      `${process.env.NEXTAUTH_URL}/customer/dashboard`
     );
 
     response.cookies.set("auth-token", token, {

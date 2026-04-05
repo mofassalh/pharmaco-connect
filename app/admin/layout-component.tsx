@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 
 const menuItems = [
   { href: "/admin/dashboard", icon: "⊞", label: "Dashboard" },
+  { href: "/admin/quick-sale", icon: "⚡", label: "Quick Sale" },
   { href: "/admin/prescriptions", icon: "📋", label: "Prescriptions" },
   { href: "/admin/inventory", icon: "📦", label: "Inventory" },
   { href: "/admin/orders", icon: "🛒", label: "Orders" },
@@ -55,8 +56,6 @@ export function AdminLayout({ children, title, active }: { children: React.React
 
   return (
     <div style={{ minHeight: "100vh", background: "#ffffff", fontFamily: "sans-serif" }}>
-
-      {/* Top Nav */}
       <div style={{
         background: "#ffffff", borderBottom: "1px solid #e2e8f0",
         padding: "0 16px", height: 52,
@@ -87,7 +86,6 @@ export function AdminLayout({ children, title, active }: { children: React.React
         </div>
       </div>
 
-      {/* Desktop Layout */}
       {!isMobile ? (
         <div style={{ display: "flex", height: "calc(100vh - 52px)" }}>
           <div style={{ width: 220, flexShrink: 0, height: "calc(100vh - 52px)", position: "sticky", top: 52, overflowY: "auto" }}>

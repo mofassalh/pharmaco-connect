@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
 
     const { payload } = await jwtVerify(token, secret);
     const user = await prisma.user.findUnique({
-      where: { id: payload.id as string },
+      where: { id: payload.userId as string },
       include: { customer: true, adminProfile: true },
     });
 
@@ -44,7 +44,7 @@ export async function PATCH(req: NextRequest) {
     const body = await req.json();
 
     const user = await prisma.user.findUnique({
-      where: { id: payload.id as string },
+      where: { id: payload.userId as string },
       include: { customer: true },
     });
 
@@ -63,7 +63,7 @@ export async function PATCH(req: NextRequest) {
 
     if (body.phone) {
       await prisma.user.update({
-        where: { id: payload.id as string },
+        where: { id: payload.userId as string },
         data: { phone: body.phone },
       });
     }

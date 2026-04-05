@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
     const { payload } = await jwtVerify(token, secret);
 
     const customer = await prisma.customer.findFirst({
-      where: { userId: payload.id as string },
+      where: { userId: payload.userId as string },
     });
 
     if (!customer) {

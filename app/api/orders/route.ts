@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
     const myOrders = searchParams.get("my");
 
     const user = await prisma.user.findUnique({
-      where: { id: payload.id as string },
+      where: { id: payload.userId as string },
       include: { customer: true },
     });
 
@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
     const { payload } = await jwtVerify(token, secret);
 
     const user = await prisma.user.findUnique({
-      where: { id: payload.id as string },
+      where: { id: payload.userId as string },
       include: { customer: true },
     });
 

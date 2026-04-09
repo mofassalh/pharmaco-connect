@@ -134,19 +134,11 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
         </div>
 
         {/* ── MAIN CONTENT ── */}
-        <div style={{ flex: 1, minWidth: 0 }}>
+<div style={{ flex: 1, minWidth: 0 }}>
+  {children}
+</div>
 
-          {/* Desktop content */}
-          <div className="desktop-content" style={{ padding: "24px", maxWidth: 1200, margin: "0 auto" }}>
-            {children}
-          </div>
-
-          {/* Mobile content */}
-          <div className="mobile-content" style={{ paddingBottom: 80 }}>
-            {children}
-          </div>
-
-        </div>
+        
       </div>
 
       {/* ── MOBILE BOTTOM NAV ── */}

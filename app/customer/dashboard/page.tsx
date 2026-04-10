@@ -81,7 +81,7 @@ export default function CustomerDashboard() {
         {/* Green Header */}
         <div style={{
           background: "linear-gradient(135deg, #16a34a 0%, #15803d 100%)",
-          padding: "20px 16px 36px",
+          padding: "20px 16px 48px",
           position: "relative", overflow: "hidden",
         }}>
           <div style={{ position: "absolute", right: -30, top: -30, width: 150, height: 150, borderRadius: "50%", background: "rgba(255,255,255,0.07)" }} />
@@ -96,7 +96,7 @@ export default function CustomerDashboard() {
         </div>
 
         {/* Stat Cards */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, padding: "0 16px", marginTop: -18 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, padding: "0 16px", marginTop: -28, position: "relative", zIndex: 2 }}>
           <div style={{ background: "#fff", borderRadius: 14, padding: 14, boxShadow: "0 4px 16px rgba(0,0,0,0.10)" }}>
             <div style={{ fontSize: 20, marginBottom: 6 }}>💊</div>
             <div style={{ fontSize: 24, fontWeight: 700, color: "#111827", lineHeight: 1 }}>{prescriptions.length}</div>
@@ -159,7 +159,7 @@ export default function CustomerDashboard() {
         <div style={{ padding: "16px 16px 8px", fontSize: 13, fontWeight: 700, color: "#6b7280" }}>
           {lang === "bn" ? "আজকের স্বাস্থ্য টিপস" : "Today's Health Tip"}
         </div>
-        <div style={{ margin: "0 16px 24px", background: "linear-gradient(135deg, #f0fdf4, #dcfce7)", border: "1px solid #bbf7d0", borderRadius: 14, padding: 16, display: "flex", gap: 12, alignItems: "flex-start" }}>
+        <div style={{ margin: "0 16px 100px", background: "linear-gradient(135deg, #f0fdf4, #dcfce7)", border: "1px solid #bbf7d0", borderRadius: 14, padding: 16, display: "flex", gap: 12, alignItems: "flex-start" }}>
           <div style={{ fontSize: 28, flexShrink: 0 }}>🥗</div>
           <div>
             <div style={{ fontSize: 13, fontWeight: 700, color: "#16a34a", marginBottom: 4 }}>{lang === "bn" ? "খাবারের পর ওষুধ খান" : "Take medicine after meals"}</div>

@@ -4,11 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLanguage } from "../context/language";
 
-const menuItems = [
+
+ const menuItems = [
   { href: "/customer/dashboard", icon: "🏠", labelBn: "হোম", labelEn: "Home" },
   { href: "/customer/prescription", icon: "📋", labelBn: "Prescription", labelEn: "Prescription" },
   { href: "/customer/health", icon: "🩺", labelBn: "স্বাস্থ্য", labelEn: "Health" },
-  { href: "/customer/family", icon: "👨‍👩‍👧", labelBn: "পরিবার", labelEn: "Family" },
+  { href: "/customer/shop", icon: "💊", labelBn: "Medicine", labelEn: "Medicine" },
   { href: "/customer/profile", icon: "👤", labelBn: "Profile", labelEn: "Profile" },
 ];
 

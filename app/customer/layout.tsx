@@ -17,7 +17,6 @@ const sidebarItems = [
   { href: "/customer/dashboard", icon: "🏠", labelBn: "হোম", labelEn: "Home" },
   { href: "/customer/prescription", icon: "📋", labelBn: "Prescription", labelEn: "Prescription" },
   { href: "/customer/health", icon: "🩺", labelBn: "স্বাস্থ্য", labelEn: "Health" },
-  { href: "/customer/family", icon: "👨‍👩‍👧", labelBn: "পরিবার", labelEn: "Family" },
   { href: "/customer/shop", icon: "💊", labelBn: "Medicine কিনুন", labelEn: "Buy Medicine" },
   { href: "/customer/orders", icon: "📦", labelBn: "Orders", labelEn: "Orders" },
   { href: "/customer/profile", icon: "👤", labelBn: "Profile", labelEn: "Profile" },

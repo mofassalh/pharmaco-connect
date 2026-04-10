@@ -67,6 +67,26 @@ export default function PrescriptionPage() {
             <span style={{ color: "rgba(255,255,255,0.7)", fontSize: 18 }}>→</span>
           </Link>
 
+        {/* Medicine Encyclopedia */}
+<Link href="/customer/medicines" style={{
+  display: "flex", alignItems: "center", gap: 12,
+  background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb",
+  padding: "14px 16px", textDecoration: "none", marginBottom: 12,
+}}>
+  <div style={{ width: 40, height: 40, borderRadius: 10, background: "#eff6ff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>📚</div>
+  <div style={{ flex: 1 }}>
+    <div style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>
+      {lang === "bn" ? "ওষুধের তথ্যভাণ্ডার" : "Medicine Encyclopedia"}
+    </div>
+    <div style={{ fontSize: 12, color: "#6b7280", marginTop: 1 }}>
+      {lang === "bn" ? "যেকোনো ওষুধের তথ্য বাংলায় জানুন" : "Learn about any medicine in Bengali"}
+    </div>
+  </div>
+  <span style={{ fontSize: 18, color: "#9ca3af" }}>→</span>
+</Link>
+
+
+
           {/* Tabs */}
           <div style={{ display: "flex", background: "#f3f4f6", borderRadius: 10, padding: 3 }}>
             <button onClick={() => setActiveTab("active")} style={{
@@ -264,6 +284,26 @@ export default function PrescriptionPage() {
             {lang === "bn" ? "Prescription Scan করুন" : "Scan Prescription"}
           </Link>
         </div>
+
+{/* Medicine Encyclopedia */}
+<Link href="/customer/medicines" style={{
+  display: "flex", alignItems: "center", gap: 12,
+  background: "#eff6ff", borderRadius: 12, border: "1px solid #bfdbfe",
+  padding: "12px 16px", textDecoration: "none", marginBottom: 20,
+}}>
+  <span style={{ fontSize: 22 }}>📚</span>
+  <div style={{ flex: 1 }}>
+    <div style={{ fontSize: 14, fontWeight: 700, color: "#1d4ed8" }}>
+      {lang === "bn" ? "ওষুধের তথ্যভাণ্ডার" : "Medicine Encyclopedia"}
+    </div>
+    <div style={{ fontSize: 12, color: "#3b82f6", marginTop: 1 }}>
+      {lang === "bn" ? "যেকোনো ওষুধের তথ্য বাংলায় জানুন" : "Learn about any medicine in Bengali"}
+    </div>
+  </div>
+  <span style={{ fontSize: 16, color: "#3b82f6" }}>→</span>
+</Link>
+
+
 
         {/* Tabs */}
         <div style={{ display: "flex", gap: 4, marginBottom: 20, background: "#f3f4f6", borderRadius: 10, padding: 4, width: "fit-content" }}>

@@ -155,6 +155,26 @@ export default function CustomerDashboard() {
           )}
         </div>
 
+{/* Refill Alert */}
+<div style={{ padding: "16px 16px 8px", fontSize: 13, fontWeight: 700, color: "#6b7280" }}>
+  {lang === "bn" ? "Refill সতর্কতা ⚠️" : "Refill Alert ⚠️"}
+</div>
+<div style={{ margin: "0 16px", background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", padding: "14px 16px", display: "flex", alignItems: "center", gap: 12 }}>
+  <div style={{ width: 40, height: 40, borderRadius: 10, background: "#fffbeb", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>⚠️</div>
+  <div style={{ flex: 1 }}>
+    <div style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>
+      {lang === "bn" ? "Prescription শেষ হওয়ার আগে refill করুন" : "Refill before prescription ends"}
+    </div>
+    <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>
+      {lang === "bn" ? "নিয়মিত ওষুধ নিশ্চিত করতে আগে থেকে order করুন" : "Order early to ensure regular medication"}
+    </div>
+  </div>
+  <Link href="/customer/prescription" style={{ fontSize: 12, fontWeight: 700, color: "#16a34a", textDecoration: "none", whiteSpace: "nowrap" }}>
+    {lang === "bn" ? "Order →" : "Order →"}
+  </Link>
+</div>
+
+
         {/* Health Tip */}
         <div style={{ padding: "16px 16px 8px", fontSize: 13, fontWeight: 700, color: "#6b7280" }}>
           {lang === "bn" ? "আজকের স্বাস্থ্য টিপস" : "Today's Health Tip"}

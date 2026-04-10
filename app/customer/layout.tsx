@@ -77,10 +77,7 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <div style={{ width: 30, height: 30, background: "rgba(255,255,255,0.2)", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>💊</div>
-          <Link href="/customer/dashboard" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none" }}>
-  <div style={{ width: 30, height: 30, background: "rgba(255,255,255,0.2)", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>💊</div>
-  <span style={{ fontWeight: 700, color: "white", fontSize: 15 }}>Pharmaco Connect</span>
-</Link>
+          <span style={{ fontWeight: 700, color: "white", fontSize: 15 }}>Pharmaco Connect</span>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <div style={{ display: "flex", background: "rgba(255,255,255,0.15)", borderRadius: 8, padding: 3 }}>
